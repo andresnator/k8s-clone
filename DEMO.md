@@ -30,7 +30,7 @@ Before starting the demo, ensure you have:
 Deploy all resources to the source namespace:
 
 ```bash
-kubectl apply -f test/test.yaml
+kubectl apply -f demo/demo.yaml
 ```
 
 This creates:
@@ -242,6 +242,21 @@ curl http://localhost:8080
 kubectl port-forward -n dest svc/backend 3000:3000
 ```
 
+### Test Ingress (Optional)
+
+If you want to access the application via `webapp.local`, you need to add the Ingress IP to your `/etc/hosts` file.
+
+1. Get the Ingress IP (if using Minikube, run `minikube tunnel` in a separate terminal first):
+   ```bash
+   kubectl get ingress -n dest
+   ```
+2. Add the entry to `/etc/hosts`:
+   ```
+   <INGRESS_IP> webapp.local
+   ```
+3. Then you can access `http://webapp.local` in your browser or via curl.
+
+
 ## Step 6: Cleanup
 
 When you're done with the demo:
@@ -254,7 +269,7 @@ kubectl delete namespace source
 kubectl delete namespace dest
 
 # Delete the PersistentVolume (if using hostPath)
-kubectl delete pv app-data-pv
+kubectl delete pv source-data-pv
 ```
 
 ## Troubleshooting
