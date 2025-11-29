@@ -1,30 +1,30 @@
 # K8s Migrator
 
-Una herramienta CLI para clonar y migrar recursos de Kubernetes entre namespaces.
+A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
-## Características
+## Features
 
-- Selección granular de recursos (Services, Deployments, ConfigMaps, Secrets, PVCs).
-- Migración de datos de PVCs (copia de contenido de volúmenes).
-- Interfaz interactiva y amigable.
+- Granular selection of resources (Services, Deployments, ConfigMaps, Secrets, PVCs).
+- PVC data migration (copies volume contents).
+- Friendly interactive interface.
 
-## Requisitos
+## Requirements
 
 - Node.js
-- `kubectl` instalado y configurado en el PATH.
-- Acceso al clúster de Kubernetes (contexto actual en `~/.kube/config`).
+- `kubectl` installed and available in your PATH.
+- Access to a Kubernetes cluster (current context in `~/.kube/config`).
 
-## Instalación
+## Installation
 
 ```bash
 npm install
 npm run build
 ```
 
-## Uso
+## Usage
 
 ```bash
 npm start
 ```
 
-Sigue las instrucciones en pantalla para seleccionar el namespace de origen, el de destino y los recursos a migrar.
+Follow the on‑screen prompts to choose the source namespace, the destination namespace, and the resources you wish to migrate.
