@@ -89,8 +89,50 @@ export class Migrator {
                 const res = await coreApi.readNamespacedPersistentVolumeClaim({ name, namespace: sourceNs });
                 const newPvc = this.cleanMetadata(res, destNs);
 
-                // Remove volumeName to allow dynamic provisioning
-                delete newPvc.spec.volumeName;
+                // Special handling for manual storage class (common in local tests/minikube)
+                if (res.spec?.storageClassName === 'manual' && res.spec?.volumeName) {
+                    try {
+                        const pvName = res.spec.volumeName;
+                        const pv = await coreApi.readPersistentVolume({ name: pvName });
+
+                        // Clone PV if it's hostPath
+                        if (pv.spec?.hostPath) {
+                            const newPvName = `migrated-${pv.metadata?.name}-${Date.now()}`;
+                            const newPv: any = {
+                                apiVersion: 'v1',
+                                kind: 'PersistentVolume',
+                                metadata: {
+                                    name: newPvName,
+                                    labels: pv.metadata?.labels
+                                },
+                                spec: {
+                                    ...pv.spec,
+                                    claimRef: null, // Clear claim ref so it can be bound to new PVC
+                                    hostPath: {
+                                        ...pv.spec.hostPath,
+                                        path: `${pv.spec.hostPath.path}-migrated-${Date.now()}` // Unique path
+                                    }
+                                }
+                            };
+
+                            // Remove system fields from PV spec if any
+                            delete newPv.spec.claimRef;
+
+                            await coreApi.createPersistentVolume({ body: newPv });
+                            this.ui.logInfo(`Created new PV ${newPvName} for manual migration.`);
+
+                            // Bind new PVC to this new PV
+                            newPvc.spec.volumeName = newPvName;
+                        }
+                    } catch (pvError: any) {
+                        this.ui.logError(`Failed to clone PV for manual PVC: ${pvError.message}. Proceeding with dynamic provisioning attempt.`);
+                        delete newPvc.spec.volumeName;
+                    }
+                } else {
+                    // Default behavior: Remove volumeName to allow dynamic provisioning
+                    delete newPvc.spec.volumeName;
+                }
+
                 // Remove status
                 delete newPvc.status;
 
