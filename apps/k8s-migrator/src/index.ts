@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { K8sClient } from './k8s';
-import { UI } from './ui';
+import { UI } from './ui.js';
 import { Migrator } from './migrator';
 import chalk from 'chalk';
 

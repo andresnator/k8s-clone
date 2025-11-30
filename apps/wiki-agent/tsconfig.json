@@ -1,7 +1,9 @@
 {
     "compilerOptions": {
-        "target": "es2018",
-        "module": "commonjs",
+        "target": "esnext",
+        "module": "nodenext",
+        "moduleResolution": "nodenext",
+        "jsx": "react-jsx",
         "outDir": "./dist",
         "rootDir": "./src",
         "strict": true,

@@ -2,23 +2,27 @@
   "name": "nodal-magnetar",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "@kubernetes/client-node": "^1.4.0",
+    "@types/react": "^19.2.7",
     "chalk": "^4.1.2",
     "commander": "^14.0.2",
     "figlet": "^1.9.4",
+    "ink": "^6.5.1",
+    "ink-big-text": "^2.0.0",
+    "ink-gradient": "^3.0.0",
     "inquirer": "^8.2.7",
-    "ora": "^5.4.1"
+    "ora": "^5.4.1",
+    "react": "^19.2.0",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.9",
