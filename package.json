@@ -1,28 +1,21 @@
 {
-  "name": "nodal-magnetar",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "start": "npm run build && node dist/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "@kubernetes/client-node": "^1.4.0",
-    "chalk": "^4.1.2",
-    "commander": "^14.0.2",
-    "figlet": "^1.9.4",
-    "inquirer": "^8.2.7",
-    "ora": "^5.4.1"
-  },
-  "devDependencies": {
-    "@types/inquirer": "^9.0.9",
-    "@types/node": "^24.10.1",
-    "typescript": "^5.9.3"
-  }
+    "name": "devtools-cli",
+    "version": "1.0.0",
+    "description": "Parent CLI to manage other tools",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "ts-node src/index.ts"
+    },
+    "dependencies": {
+        "@types/figlet": "^1.7.0",
+        "chalk": "^4.1.2",
+        "figlet": "^1.9.4",
+        "inquirer": "^8.2.5",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.0.0"
+    },
+    "devDependencies": {
+        "@types/inquirer": "^9.0.9"
+    }
 }
