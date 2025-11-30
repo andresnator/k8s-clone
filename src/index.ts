@@ -1,21 +1,22 @@
 #!/usr/bin/env node
-import { K8sClient } from './k8s';
-import { UI } from './ui';
-import { Migrator } from './migrator';
+import { K8sClient } from './k8s.js';
+import { UI } from './ui.js';
+import { Migrator } from './migrator.js';
 import chalk from 'chalk';
 
 async function main() {
     const ui = new UI();
-    ui.showBanner();
+    await ui.showBanner();
 
     const k8sClient = new K8sClient();
     const migrator = new Migrator(k8sClient, ui);
 
     try {
         const namespaces = await k8sClient.listNamespaces();
+        console.log('Available Namespaces:', namespaces);
 
-        const sourceNs = await ui.selectNamespace(namespaces, 'Select Source Namespace:');
-        const destNs = await ui.selectNamespace(namespaces, 'Select Destination Namespace:');
+        const sourceNs = await ui.selectNamespace(namespaces, 'Enter Source Namespace:');
+        const destNs = await ui.selectNamespace(namespaces, 'Enter Destination Namespace:');
 
         if (sourceNs === destNs) {
             ui.logError('Source and Destination namespaces must be different.');
