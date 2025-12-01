@@ -47,6 +47,14 @@ export class Migrator {
         return obj;
     }
 
+    private handleError(resourceType: string, name: string, error: any) {
+        if (error.body && error.body.reason === 'AlreadyExists') {
+            this.ui.logError(`${resourceType} '${name}' already exists in destination. Skipping.`);
+        } else {
+            this.ui.logError(`Failed to migrate ${resourceType} ${name}: ${error.body?.message || error.message}`);
+        }
+    }
+
     async migrateResources(
         sourceNs: string,
         destNs: string,
@@ -72,7 +80,7 @@ export class Migrator {
                 await destCore.createNamespacedConfigMap({ namespace: destNs, body: newCm });
                 this.ui.logSuccess(`ConfigMap ${name} migrated.`);
             } catch (e: any) {
-                this.ui.logError(`Failed to migrate ConfigMap ${name}: ${e.body?.message || e.message}`);
+                this.handleError('ConfigMap', name, e);
             }
         }
 
@@ -84,7 +92,7 @@ export class Migrator {
                 await destCore.createNamespacedSecret({ namespace: destNs, body: newSecret });
                 this.ui.logSuccess(`Secret ${name} migrated.`);
             } catch (e: any) {
-                this.ui.logError(`Failed to migrate Secret ${name}: ${e.body?.message || e.message}`);
+                this.handleError('Secret', name, e);
             }
         }
 
@@ -98,40 +106,20 @@ export class Migrator {
                 if (res.spec?.storageClassName === 'manual' && res.spec?.volumeName) {
                     try {
                         const pvName = res.spec.volumeName;
-                        const pv = await sourceCore.readPersistentVolume({ name: pvName });
+                        const pvRes = await sourceCore.readPersistentVolume({ name: pvName });
+                        const newPv = this.cleanMetadata(pvRes, destNs); // PVs are cluster-wide, but we clean metadata
 
-                        // Clone PV if it's hostPath
-                        if (pv.spec?.hostPath) {
-                            const newPvName = `migrated-${pv.metadata?.name}-${Date.now()}`;
-                            const newPv: any = {
-                                apiVersion: 'v1',
-                                kind: 'PersistentVolume',
-                                metadata: {
-                                    name: newPvName,
-                                    labels: pv.metadata?.labels
-                                },
-                                spec: {
-                                    ...pv.spec,
-                                    claimRef: null, // Clear claim ref so it can be bound to new PVC
-                                    hostPath: {
-                                        ...pv.spec.hostPath,
-                                        path: `${pv.spec.hostPath.path}-migrated-${Date.now()}` // Unique path
-                                    }
-                                }
-                            };
+                        // Create a new PV name to avoid conflict
+                        newPv.metadata!.name = `migrated-${pvName}-${Date.now()}`;
+                        newPv.spec!.claimRef = undefined; // Clear claim ref so new PVC can bind
 
-                            // Remove system fields from PV spec if any
-                            delete newPv.spec.claimRef;
+                        await destCore.createPersistentVolume({ body: newPv });
+                        this.ui.logInfo(`Created new PV ${newPv.metadata!.name} for manual migration.`);
 
-                            await destCore.createPersistentVolume({ body: newPv });
-                            this.ui.logInfo(`Created new PV ${newPvName} for manual migration.`);
-
-                            // Bind new PVC to this new PV
-                            newPvc.spec.volumeName = newPvName;
-                        }
-                    } catch (pvError: any) {
-                        this.ui.logError(`Failed to clone PV for manual PVC: ${pvError.message}. Proceeding with dynamic provisioning attempt.`);
-                        delete newPvc.spec.volumeName;
+                        // Update PVC to point to new PV
+                        newPvc.spec!.volumeName = newPv.metadata!.name;
+                    } catch (pvError) {
+                        // Ignore if PV not found or other issue, try creating PVC anyway
                     }
                 } else {
                     // Default behavior: Remove volumeName to allow dynamic provisioning
@@ -148,7 +136,7 @@ export class Migrator {
                 await this.migratePVCData(sourceNs, name, destNs, name);
 
             } catch (e: any) {
-                this.ui.logError(`Failed to migrate PVC ${name}: ${e.body?.message || e.message}`);
+                this.handleError('PVC', name, e);
             }
         }
 
@@ -160,7 +148,7 @@ export class Migrator {
                 await destCore.createNamespacedService({ namespace: destNs, body: newSvc });
                 this.ui.logSuccess(`Service ${name} migrated.`);
             } catch (e: any) {
-                this.ui.logError(`Failed to migrate Service ${name}: ${e.body?.message || e.message}`);
+                this.handleError('Service', name, e);
             }
         }
 
@@ -172,7 +160,7 @@ export class Migrator {
                 await destApps.createNamespacedDeployment({ namespace: destNs, body: newDep });
                 this.ui.logSuccess(`Deployment ${name} migrated.`);
             } catch (e: any) {
-                this.ui.logError(`Failed to migrate Deployment ${name}: ${e.body?.message || e.message}`);
+                this.handleError('Deployment', name, e);
             }
         }
     }

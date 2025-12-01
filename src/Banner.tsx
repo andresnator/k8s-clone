@@ -5,8 +5,8 @@ import BigText from 'ink-big-text';
 
 export const Banner = () => (
     <>
-        <Gradient name="cristal">
-            <BigText text="K8s Migrator" />
+        <Gradient name="teen">
+            <BigText text="K8s Clone" />
         </Gradient>
         <Text color="yellow">Kubernetes Resource Migration Tool</Text>
         <Text> </Text>

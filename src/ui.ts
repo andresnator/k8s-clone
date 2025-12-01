@@ -4,46 +4,74 @@ import React from 'react';
 import { render } from 'ink';
 import { Banner } from './Banner.js';
 
+export class BackError extends Error {
+    constructor() {
+        super('Back to main menu');
+        this.name = 'BackError';
+    }
+}
+
 export class UI {
     async showBanner() {
         const { unmount } = render(React.createElement(Banner));
-        // Give it a moment to render, then unmount so we can proceed with inquirer
-        // Or better, just let it render and unmount immediately?
-        // Ink renders to stdout. If we unmount, it might stop managing it.
-        // But we want the text to stay.
-        // If we unmount, Ink usually clears the output?
-        // No, Ink appends to output. If we unmount, it stops updating.
-        // But if we want it to persist, we should just let it be.
-        // However, inquirer also writes to stdout.
-        // Let's try waiting a small delay then unmount.
         await new Promise(resolve => setTimeout(resolve, 100));
         unmount();
+        console.log(''); // Ensure spacing after banner
+    }
+
+    async showMainMenu(): Promise<'clone' | 'clean' | 'exit'> {
+        const { action } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'action',
+                message: 'What would you like to do?',
+                choices: [
+                    { name: 'Clone Resources (Cluster to Cluster)', value: 'clone' },
+                    { name: 'Clean Namespace (Delete Resources)', value: 'clean' },
+                    { name: 'Exit', value: 'exit' },
+                ],
+            },
+        ]);
+        return action;
     }
 
     async selectContext(contexts: string[], message: string): Promise<string> {
+        const choices = [...contexts, new inquirer.Separator(), { name: chalk.yellow('[ Back to Main Menu ]'), value: 'BACK' }];
         const { context } = await inquirer.prompt([
             {
                 type: 'list',
                 name: 'context',
                 message: message,
-                choices: contexts,
+                choices: choices,
             },
         ]);
+
+        if (context === 'BACK') {
+            throw new BackError();
+        }
         return context;
     }
 
     async selectNamespace(namespaces: string[], message: string): Promise<string> {
+        const choices = [
+            ...namespaces,
+            new inquirer.Separator(),
+            { name: chalk.yellow('[ Back to Main Menu ]'), value: 'BACK' }
+        ];
+
         const { namespace } = await inquirer.prompt([
             {
-                type: 'input',
+                type: 'list',
                 name: 'namespace',
                 message: message,
-                validate: (input) => {
-                    if (namespaces.includes(input)) return true;
-                    return `Namespace '${input}' not found. Available: ${namespaces.join(', ')}`;
-                },
+                choices: choices,
+                pageSize: 20,
             },
         ]);
+
+        if (namespace === 'BACK') {
+            throw new BackError();
+        }
         return namespace;
     }
 
@@ -52,14 +80,45 @@ export class UI {
             console.log(chalk.yellow(`No ${resourceType} found.`));
             return [];
         }
+
+        // No "Back" option in the checkbox list to prevent 'toggle all' from selecting it
+        const choices = [...resources];
+
         const { selected } = await inquirer.prompt([
             {
                 type: 'checkbox',
                 name: 'selected',
-                message: `Select ${resourceType} to clone:`,
-                choices: resources,
+                message: `Select ${resourceType}:`,
+                choices: choices,
+                pageSize: 20,
             },
         ]);
+
+        if (selected.length === 0) {
+            // If nothing selected, ask user intent
+            const { action } = await inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'action',
+                    message: `No ${resourceType} selected. What would you like to do?`,
+                    choices: [
+                        { name: 'Skip (Migrate None)', value: 'SKIP' },
+                        { name: 'Retry Selection', value: 'RETRY' },
+                        { name: chalk.yellow('[ Back to Main Menu ]'), value: 'BACK' },
+                    ],
+                },
+            ]);
+
+            if (action === 'BACK') {
+                throw new BackError();
+            }
+            if (action === 'RETRY') {
+                return this.selectResources(resourceType, resources);
+            }
+            // action === 'SKIP'
+            return [];
+        }
+
         return selected;
     }
 
