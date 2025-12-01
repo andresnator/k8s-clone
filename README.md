@@ -39,10 +39,44 @@ The demo uses a full-stack application (Frontend + Backend + Database) with pers
 - **Networking**: Preserving Services and Ingress rules.
 
 Check out **[DEMO.md](./DEMO.md)** for step-by-step instructions on how to deploy the test app and run the migration.
+ 
+## Multi-Cluster Setup (Minikube)
+
+To test migration between two clusters, you can use Minikube profiles:
+
+1.  **Start Source Cluster**:
+    ```bash
+    minikube start -p source
+    ```
+
+2.  **Start Destination Cluster**:
+    ```bash
+    minikube start -p dest
+    ```
+
+3.  **Apply Demo Resources to Source**:
+    ```bash
+    kubectl --context source apply -f demo/demo.yaml
+    ```
+
+4.  **Create Destination Namespace in Dest Cluster**:
+    ```bash
+    kubectl --context dest create namespace dest
+    ```
+
+5.  **Run Migrator**:
+    ```bash
+    npm start
+    ```
+    - Select `source` as Source Context.
+    - Select `dest` as Destination Context.
+    - Select `source` as Source Namespace.
+    - Select `dest` as Destination Namespace.
 
 ## How It Works
 
-1. **Select Resources**: Interactive prompts let you choose which resources to migrate
+1. **Select Contexts & Namespaces**: Choose source/destination clusters and namespaces
+2. **Select Resources**: Interactive prompts let you choose which resources to migrate
 2. **Clean Metadata**: System-generated fields are automatically removed
 3. **Migrate Data**: PVC data is transferred using temporary pods and `tar` streaming
 4. **Create Resources**: All selected resources are recreated in the destination namespace

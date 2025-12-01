@@ -4,11 +4,13 @@ import { UI } from './ui.js';
 import { spawn } from 'child_process';
 
 export class Migrator {
-    private k8sClient: K8sClient;
+    private sourceClient: K8sClient;
+    private destClient: K8sClient;
     private ui: UI;
 
-    constructor(k8sClient: K8sClient, ui: UI) {
-        this.k8sClient = k8sClient;
+    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
+        this.sourceClient = sourceClient;
+        this.destClient = destClient;
         this.ui = ui;
     }
 
@@ -56,15 +58,18 @@ export class Migrator {
             pvcs: string[];
         }
     ) {
-        const coreApi = this.k8sClient.getCoreApi();
-        const appsApi = this.k8sClient.getAppsApi();
+
+        const sourceCore = this.sourceClient.getCoreApi();
+        const sourceApps = this.sourceClient.getAppsApi();
+        const destCore = this.destClient.getCoreApi();
+        const destApps = this.destClient.getAppsApi();
 
         // 1. ConfigMaps
         for (const name of selections.configMaps) {
             try {
-                const res = await coreApi.readNamespacedConfigMap({ name, namespace: sourceNs });
+                const res = await sourceCore.readNamespacedConfigMap({ name, namespace: sourceNs });
                 const newCm = this.cleanMetadata(res, destNs);
-                await coreApi.createNamespacedConfigMap({ namespace: destNs, body: newCm });
+                await destCore.createNamespacedConfigMap({ namespace: destNs, body: newCm });
                 this.ui.logSuccess(`ConfigMap ${name} migrated.`);
             } catch (e: any) {
                 this.ui.logError(`Failed to migrate ConfigMap ${name}: ${e.body?.message || e.message}`);
@@ -74,9 +79,9 @@ export class Migrator {
         // 2. Secrets
         for (const name of selections.secrets) {
             try {
-                const res = await coreApi.readNamespacedSecret({ name, namespace: sourceNs });
+                const res = await sourceCore.readNamespacedSecret({ name, namespace: sourceNs });
                 const newSecret = this.cleanMetadata(res, destNs);
-                await coreApi.createNamespacedSecret({ namespace: destNs, body: newSecret });
+                await destCore.createNamespacedSecret({ namespace: destNs, body: newSecret });
                 this.ui.logSuccess(`Secret ${name} migrated.`);
             } catch (e: any) {
                 this.ui.logError(`Failed to migrate Secret ${name}: ${e.body?.message || e.message}`);
@@ -86,14 +91,14 @@ export class Migrator {
         // 3. PVCs
         for (const name of selections.pvcs) {
             try {
-                const res = await coreApi.readNamespacedPersistentVolumeClaim({ name, namespace: sourceNs });
+                const res = await sourceCore.readNamespacedPersistentVolumeClaim({ name, namespace: sourceNs });
                 const newPvc = this.cleanMetadata(res, destNs);
 
                 // Special handling for manual storage class (common in local tests/minikube)
                 if (res.spec?.storageClassName === 'manual' && res.spec?.volumeName) {
                     try {
                         const pvName = res.spec.volumeName;
-                        const pv = await coreApi.readPersistentVolume({ name: pvName });
+                        const pv = await sourceCore.readPersistentVolume({ name: pvName });
 
                         // Clone PV if it's hostPath
                         if (pv.spec?.hostPath) {
@@ -118,7 +123,7 @@ export class Migrator {
                             // Remove system fields from PV spec if any
                             delete newPv.spec.claimRef;
 
-                            await coreApi.createPersistentVolume({ body: newPv });
+                            await destCore.createPersistentVolume({ body: newPv });
                             this.ui.logInfo(`Created new PV ${newPvName} for manual migration.`);
 
                             // Bind new PVC to this new PV
@@ -136,7 +141,7 @@ export class Migrator {
                 // Remove status
                 delete newPvc.status;
 
-                await coreApi.createNamespacedPersistentVolumeClaim({ namespace: destNs, body: newPvc });
+                await destCore.createNamespacedPersistentVolumeClaim({ namespace: destNs, body: newPvc });
                 this.ui.logSuccess(`PVC ${name} created in destination.`);
 
                 // Migrate Data
@@ -150,9 +155,9 @@ export class Migrator {
         // 4. Services
         for (const name of selections.services) {
             try {
-                const res = await coreApi.readNamespacedService({ name, namespace: sourceNs });
+                const res = await sourceCore.readNamespacedService({ name, namespace: sourceNs });
                 const newSvc = this.cleanMetadata(res, destNs);
-                await coreApi.createNamespacedService({ namespace: destNs, body: newSvc });
+                await destCore.createNamespacedService({ namespace: destNs, body: newSvc });
                 this.ui.logSuccess(`Service ${name} migrated.`);
             } catch (e: any) {
                 this.ui.logError(`Failed to migrate Service ${name}: ${e.body?.message || e.message}`);
@@ -162,9 +167,9 @@ export class Migrator {
         // 5. Deployments
         for (const name of selections.deployments) {
             try {
-                const res = await appsApi.readNamespacedDeployment({ name, namespace: sourceNs });
+                const res = await sourceApps.readNamespacedDeployment({ name, namespace: sourceNs });
                 const newDep = this.cleanMetadata(res, destNs);
-                await appsApi.createNamespacedDeployment({ namespace: destNs, body: newDep });
+                await destApps.createNamespacedDeployment({ namespace: destNs, body: newDep });
                 this.ui.logSuccess(`Deployment ${name} migrated.`);
             } catch (e: any) {
                 this.ui.logError(`Failed to migrate Deployment ${name}: ${e.body?.message || e.message}`);
@@ -197,28 +202,31 @@ export class Migrator {
             } as k8s.V1Pod;
         };
 
-        const coreApi = this.k8sClient.getCoreApi();
+        const sourceCore = this.sourceClient.getCoreApi();
+        const destCore = this.destClient.getCoreApi();
 
         try {
             // Create Sender (sleep infinity to keep it running for exec)
             this.ui.logInfo(`Creating sender pod ${senderPodName} in ${sourceNs}...`);
-            await coreApi.createNamespacedPod({ namespace: sourceNs, body: createPodSpec(senderPodName, sourceNs, sourcePvc, ['sleep', '3600']) });
+            await sourceCore.createNamespacedPod({ namespace: sourceNs, body: createPodSpec(senderPodName, sourceNs, sourcePvc, ['sleep', '3600']) });
 
             // Create Receiver
             this.ui.logInfo(`Creating receiver pod ${receiverPodName} in ${destNs}...`);
-            await coreApi.createNamespacedPod({ namespace: destNs, body: createPodSpec(receiverPodName, destNs, destPvc, ['sleep', '3600']) });
+            await destCore.createNamespacedPod({ namespace: destNs, body: createPodSpec(receiverPodName, destNs, destPvc, ['sleep', '3600']) });
 
             // Wait for pods to be ready
             this.ui.logInfo('Waiting for pods to be ready...');
-            await this.waitForPodRunning(sourceNs, senderPodName);
-            await this.waitForPodRunning(destNs, receiverPodName);
+            await this.waitForPodRunning(this.sourceClient, sourceNs, senderPodName);
+            await this.waitForPodRunning(this.destClient, destNs, receiverPodName);
 
             // Execute Copy
             this.ui.logInfo('Transferring data...');
             // We use shell piping: kubectl exec sender ... tar | kubectl exec receiver ... tar
             // Note: This requires kubectl to be in the path
+            const sourceCtx = this.sourceClient.getCurrentContext();
+            const destCtx = this.destClient.getCurrentContext();
 
-            const cmd = `kubectl exec ${senderPodName} -n ${sourceNs} -- tar cf - -C /data . | kubectl exec -i ${receiverPodName} -n ${destNs} -- tar xf - -C /data`;
+            const cmd = `kubectl --context ${sourceCtx} exec ${senderPodName} -n ${sourceNs} -- tar cf - -C /data . | kubectl --context ${destCtx} exec -i ${receiverPodName} -n ${destNs} -- tar xf - -C /data`;
 
             await new Promise<void>((resolve, reject) => {
                 const child = spawn(cmd, { shell: true });
@@ -241,16 +249,16 @@ export class Migrator {
             // Cleanup
             this.ui.logInfo('Cleaning up migration pods...');
             try {
-                await coreApi.deleteNamespacedPod({ name: senderPodName, namespace: sourceNs });
-                await coreApi.deleteNamespacedPod({ name: receiverPodName, namespace: destNs });
+                await sourceCore.deleteNamespacedPod({ name: senderPodName, namespace: sourceNs });
+                await destCore.deleteNamespacedPod({ name: receiverPodName, namespace: destNs });
             } catch (e) {
                 // ignore cleanup errors
             }
         }
     }
 
-    private async waitForPodRunning(ns: string, name: string) {
-        const coreApi = this.k8sClient.getCoreApi();
+    private async waitForPodRunning(client: K8sClient, ns: string, name: string) {
+        const coreApi = client.getCoreApi();
         for (let i = 0; i < 60; i++) { // Wait up to 60 seconds
             const res = await coreApi.readNamespacedPod({ name, namespace: ns });
             if (res.status?.phase === 'Running') return;

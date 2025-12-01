@@ -8,28 +8,49 @@ async function main() {
     const ui = new UI();
     await ui.showBanner();
 
-    const k8sClient = new K8sClient();
-    const migrator = new Migrator(k8sClient, ui);
+    const tempClient = new K8sClient();
+    const contexts = tempClient.getContexts();
+
+    if (contexts.length === 0) {
+        ui.logError('No contexts found in kubeconfig.');
+        process.exit(1);
+    }
+
+    console.log('Available Contexts:', contexts);
+
+    const sourceCtx = await ui.selectContext(contexts, 'Select Source Context (Cluster):');
+    const destCtx = await ui.selectContext(contexts, 'Select Destination Context (Cluster):');
+
+    const sourceClient = new K8sClient(sourceCtx);
+    const destClient = new K8sClient(destCtx);
+
+    const migrator = new Migrator(sourceClient, destClient, ui);
 
     try {
-        const namespaces = await k8sClient.listNamespaces();
-        console.log('Available Namespaces:', namespaces);
+        const namespaces = await sourceClient.listNamespaces();
+        console.log('Available Namespaces (Source):', namespaces);
 
         const sourceNs = await ui.selectNamespace(namespaces, 'Enter Source Namespace:');
-        const destNs = await ui.selectNamespace(namespaces, 'Enter Destination Namespace:');
 
-        if (sourceNs === destNs) {
-            ui.logError('Source and Destination namespaces must be different.');
+        // For destination, we might want to list namespaces from dest cluster to validate, 
+        // or just allow creating a new one (though our code assumes it exists or we create resources in it).
+        // Let's list dest namespaces for validation/selection.
+        const destNamespaces = await destClient.listNamespaces();
+        console.log('Available Namespaces (Destination):', destNamespaces);
+        const destNs = await ui.selectNamespace(destNamespaces, 'Enter Destination Namespace:');
+
+        if (sourceCtx === destCtx && sourceNs === destNs) {
+            ui.logError('Source and Destination must be different (either different cluster or different namespace).');
             process.exit(1);
         }
 
-        ui.logInfo(`Fetching resources from ${sourceNs}...`);
+        ui.logInfo(`Fetching resources from ${sourceNs} in ${sourceCtx}...`);
 
-        const services = await k8sClient.listServices(sourceNs);
-        const deployments = await k8sClient.listDeployments(sourceNs);
-        const configMaps = await k8sClient.listConfigMaps(sourceNs);
-        const secrets = await k8sClient.listSecrets(sourceNs);
-        const pvcs = await k8sClient.listPVCs(sourceNs);
+        const services = await sourceClient.listServices(sourceNs);
+        const deployments = await sourceClient.listDeployments(sourceNs);
+        const configMaps = await sourceClient.listConfigMaps(sourceNs);
+        const secrets = await sourceClient.listSecrets(sourceNs);
+        const pvcs = await sourceClient.listPVCs(sourceNs);
 
         const selectedServices = await ui.selectResources('Services', services.map(s => s.metadata?.name || ''));
         const selectedDeployments = await ui.selectResources('Deployments', deployments.map(d => d.metadata?.name || ''));

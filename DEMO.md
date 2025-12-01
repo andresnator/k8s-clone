@@ -90,15 +90,9 @@ You should see:
 - `users.json` - JSON with user data
 - `logs/app.log` - Application log file
 
-## Step 2: Verify Destination Namespace
+## Step 2: Create Destination Namespace
 
-The destination namespace `dest` is already created by the YAML file. Verify it exists:
-
-```bash
-kubectl get namespace dest
-```
-
-If for some reason you need to create it manually:
+The destination namespace `dest` needs to be created manually on the destination cluster (or the same cluster if testing locally).
 
 ```bash
 kubectl create namespace dest
@@ -116,29 +110,35 @@ npm start
 
 The tool will guide you through:
 
-1. **Select Source Namespace**
-   - Choose: `source`
+1. **Select Source Context**
+   - Choose your source cluster context (e.g., `source` or `minikube`)
 
-2. **Select Destination Namespace**
-   - Choose: `dest`
+2. **Select Destination Context**
+   - Choose your destination cluster context (e.g., `dest` or `minikube`)
 
-3. **Select ConfigMaps**
+3. **Enter Source Namespace**
+   - Enter: `source`
+
+4. **Enter Destination Namespace**
+   - Enter: `dest`
+
+5. **Select ConfigMaps**
    - Select: `app-config`
 
-4. **Select Secrets**
+6. **Select Secrets**
    - Select: `db-credentials` and `tls-cert`
 
-5. **Select PVCs**
+7. **Select PVCs**
    - Select: `app-data-pvc`
    - ⚠️ This will trigger data migration (may take a few minutes)
 
-6. **Select Services**
+8. **Select Services**
    - Select: `backend` and `frontend`
 
-7. **Select Deployments**
+9. **Select Deployments**
    - Select: `backend-deployment` and `frontend-deployment`
 
-8. **Confirm Migration**
+10. **Confirm Migration**
    - Review the summary
    - Confirm: `Yes`
 

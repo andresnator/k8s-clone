@@ -20,6 +20,18 @@ export class UI {
         unmount();
     }
 
+    async selectContext(contexts: string[], message: string): Promise<string> {
+        const { context } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'context',
+                message: message,
+                choices: contexts,
+            },
+        ]);
+        return context;
+    }
+
     async selectNamespace(namespaces: string[], message: string): Promise<string> {
         const { namespace } = await inquirer.prompt([
             {
