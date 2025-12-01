@@ -1,6 +1,6 @@
 import * as k8s from '@kubernetes/client-node';
-import { K8sClient } from './k8s';
-import { UI } from './ui';
+import { K8sClient } from './k8s.js';
+import { UI } from './ui.js';
 import { spawn } from 'child_process';
 
 export class Migrator {
