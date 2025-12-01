@@ -5,11 +5,22 @@ export class K8sClient {
     private k8sApi: k8s.CoreV1Api;
     private k8sAppsApi: k8s.AppsV1Api;
 
-    constructor() {
+    constructor(context?: string) {
         this.kc = new k8s.KubeConfig();
         this.kc.loadFromDefault();
+        if (context) {
+            this.kc.setCurrentContext(context);
+        }
         this.k8sApi = this.kc.makeApiClient(k8s.CoreV1Api);
         this.k8sAppsApi = this.kc.makeApiClient(k8s.AppsV1Api);
+    }
+
+    getContexts(): string[] {
+        return this.kc.getContexts().map(c => c.name);
+    }
+
+    getCurrentContext(): string {
+        return this.kc.getCurrentContext();
     }
 
     async listNamespaces(): Promise<string[]> {

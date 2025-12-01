@@ -1,5 +1,9 @@
 # ============================================
 # Complete Kubernetes Example for Migration Testing
+#
+# For Multi-Cluster Testing:
+# 1. Apply this file to your SOURCE cluster: kubectl --context source apply -f demo/demo.yaml
+# 2. Create the destination namespace in your DESTINATION cluster: kubectl --context dest create namespace dest
 # ============================================
 
 # 1. Namespace - Source
@@ -12,15 +16,8 @@ metadata:
     environment: development
     team: platform
 
-# 1b. Namespace - Destination (empty, ready for migration)
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: dest
-  labels:
-    environment: development
-    team: platform
+# The 'dest' namespace definition (1b) has been removed as it's no longer needed in this file for migration testing.
+# The destination namespace should be created manually on the destination cluster before running the migration.
 
 # 2. ConfigMap - Application Configuration
 ---

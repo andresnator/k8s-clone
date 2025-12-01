@@ -19,7 +19,7 @@
         "ink": "^6.5.1",
         "ink-big-text": "^2.0.0",
         "ink-gradient": "^3.0.0",
-        "inquirer": "^13.0.1",
+        "inquirer": "^9.3.8",
         "ora": "^9.0.0",
         "react": "^19.2.0"
     },
