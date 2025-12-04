@@ -183,7 +183,7 @@ describe('Cleaner', () => {
             });
 
             // Verify order through success log calls
-            const successCalls = (ui.logSuccess as jest.Mock).mock.calls.map((call: string[]) => call[0]);
+            const successCalls = (ui.logSuccess as jest.Mock).mock.calls.map((call) => call[0] as string);
             expect(successCalls).toEqual([
                 'Deployment dep1 deleted.',
                 'Service svc1 deleted.',

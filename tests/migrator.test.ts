@@ -323,7 +323,7 @@ describe('Migrator', () => {
             });
 
             // Verify order: ConfigMaps, Secrets, Services, Deployments
-            const successCalls = (ui.logSuccess as jest.Mock).mock.calls.map((call: string[]) => call[0]);
+            const successCalls = (ui.logSuccess as jest.Mock).mock.calls.map((call) => call[0] as string);
             expect(successCalls).toEqual([
                 'ConfigMap cm1 migrated.',
                 'Secret s1 migrated.',
