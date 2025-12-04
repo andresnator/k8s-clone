@@ -24,7 +24,7 @@ interface Config {
 }
 
 /**
- * LoadsLoads and providesprovides access to cluster, namespacenamespace, and resourceresource configurations from a JSON filefile.
+ * LoadsLoadsLoadsLoads and providesprovides access to cluster, namespacenamespace, and resourceresource configurations from a JSON filefile.
  * If the config filefile doesn't exist or is invalid, methods return null to trigger fallback to API calls.
  *
  * The expected config filefile structurestructure:
