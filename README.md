@@ -21,10 +21,10 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
 ### Global Installation (Recommended)
 
-Install `k8s-clone` globally from GitHub:
+Install `k8s-clone` globally from npm:
 
 ```bash
-npm install -g github:andresnator/k8s-clone
+npm install -g k8s-clone
 ```
 
 Then run:
@@ -36,6 +36,8 @@ k8s-clone
 ### Local Development
 
 ```bash
+git clone https://github.com/andresnator/k8s-clone.git
+cd k8s-clone
 npm install
 npm run build
 ```
@@ -129,6 +131,10 @@ To run the unit tests:
 ```bash
 npm test
 ```
+
+## Contributing
+
+Contributions are welcome! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to contribute, including our commit message conventions and automated release process.
 
 ## License
 
