@@ -1,17 +1,31 @@
 {
-    "name": "nodal-magnetar",
+    "name": "k8s-clone",
     "version": "1.0.0",
-    "description": "",
+    "description": "A CLI tool to clone and migrate Kubernetes resources across namespaces",
     "type": "module",
-    "main": "index.js",
+    "main": "dist/index.js",
+    "bin": {
+        "k8s-clone": "./dist/index.js"
+    },
+    "files": [
+        "dist"
+    ],
     "scripts": {
         "build": "tsc",
         "start": "npm run build && node dist/index.js",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
-        "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2"
+        "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2",
+        "prepublishOnly": "npm run build"
     },
-    "keywords": [],
+    "keywords": [
+        "kubernetes",
+        "k8s",
+        "cli",
+        "migration",
+        "kubectl",
+        "devops"
+    ],
     "author": "",
     "license": "MIT",
     "dependencies": {
