@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml)
+[![npm version](https://badge.fury.io/js/@andresnator%2Fk8s-clone.svg)](https://badge.fury.io/js/@andresnator%2Fk8s-clone)
 
 A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
@@ -24,7 +25,7 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 Install `k8s-clone` globally from npm:
 
 ```bash
-npm install -g k8s-clone
+npm install -g @andresnator/k8s-clone
 ```
 
 Then run:

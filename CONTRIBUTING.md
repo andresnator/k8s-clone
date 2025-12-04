@@ -1,6 +1,6 @@
 # Contributing to k8s-clone
 
-Thank youyou for youryour interestinterest in contributingcontributing to k8s-clones-clone! This document providesprovides guidelinesguidelines and information for contributors.
+Thank you for your interest in contributing to k8s-clone! This document provides guidelines and information for contributors.
 
 ## Development Setup
 
@@ -77,11 +77,11 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 | `feat` | New features | **Minor** (1.0.0 → 1.1.0) |
 | `feat!` | Breaking changes | **Major** (1.0.0 → 2.0.0) |
 | `docs` | Documentation changes | No version bump |
-| `stylestyle` | CodeCode stylestyle changes (formattingformatting) | No version bump |
-| `refactor` | CodeCode refactoring | No version bump |
-| `perf` | PerformancePerformance improvementsimprovements | No version bump |
-| `test` | AddingAdding or updatingupdating tests | No version bump |
-| `chorechore` | MaintenanceMaintenance tasks | No version bump |
+| `style` | Code style changes (formatting) | No version bump |
+| `refactor` | Code refactoring | No version bump |
+| `perf` | Performance improvements | No version bump |
+| `test` | Adding or updating tests | No version bump |
+| `chore` | Maintenance tasks | No version bump |
 | `ci` | CI/CD changes | No version bump |
 
 ### Examples

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-K8s Migrator is a CLI tool for cloning and migrating Kubernetes resources across namespaces. It provides an interactive interface for selecting and migrating Services, Deployments, ConfigMaps, Secrets, and PVCs (including volume data).
+K8s Migrator (`@andresnator/k8s-clone`) is a CLI tool for cloning and migrating Kubernetes resources across namespaces. It provides an interactive interface for selecting and migrating Services, Deployments, ConfigMaps, Secrets, and PVCs (including volume data).
 
 ## Build and Run Commands
 

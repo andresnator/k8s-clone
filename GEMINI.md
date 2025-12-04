@@ -1,4 +1,4 @@
-# K8s Migrator (nodal-magnetar)
+# K8s Migrator (@andresnator/k8s-clone)
 
 ## Project Overview
 
