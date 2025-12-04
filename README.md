@@ -13,7 +13,7 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
 ## Requirements
 
-- Node.js
+- Node.js (Tested on v20.x and v22.x)
 - `kubectl` installed and available in your PATH.
 - Access to a Kubernetes cluster (current context in `~/.kube/config`).
 
