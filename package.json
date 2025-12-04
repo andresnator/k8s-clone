@@ -26,7 +26,7 @@
         "kubectl",
         "devops"
     ],
-    "author": "",
+    "author": "@andresnator",
     "license": "MIT",
     "dependencies": {
         "@kubernetes/client-node": "^1.4.0",
