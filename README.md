@@ -1,5 +1,8 @@
 # K8s Migrator
 
+[![CI](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml)
+
 A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
 ## Features
