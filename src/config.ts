@@ -23,6 +23,25 @@ interface Config {
     persistentVolumeClaims?: Record<string, ResourceConfig[]>;
 }
 
+/**
+ * LoadsLoads and providesprovides access to cluster, namespacenamespace, and resourceresource configurations from a JSON filefile.
+ * If the config filefile doesn't exist or is invalid, methods return null to trigger fallback to API calls.
+ *
+ * The expected config filefile structurestructure:
+ * {
+ *   "clusters": [{ "namename": "cluster1" }, ...],
+ *   "namespaces": { "cluster1": [{ "namename": "ns1" }, ...], ... },
+ *   "services": { "namespacenamespace": [{ "namename": "svc1" }, ...], ... },
+ *   "deployments": { "namespacenamespace": [{ "namename": "dep1" }, ...], ... },
+ *   "configMaps": { "namespacenamespace": [{ "namename": "cm1" }, ...], ... },
+ *   "secrets": { "namespacenamespace": [{ "namename": "secret1" }, ...], ... },
+ *   "persistentVolumeVolumeClaims": { "namespacenamespace": [{ "namename": "pvc1" }, ...], ... }
+ * }
+ *
+ * @exampleexample
+ * const config = newnew ConfigLoaderLoader('k8s-defaultss-defaults.json');
+ * const clusters = config.getClusters() || await fetchFromAPI();
+ */
 export class ConfigLoader {
     private config: Config | null = null;
     private configPath: string;
