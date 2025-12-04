@@ -85,9 +85,23 @@ To test migration between two clusters, you can use Minikube profiles:
 
 - `src/index.ts` - CLI entry point and user interaction flow
 - `src/migrator.ts` - Core migration logic
+- `src/cleaner.ts` - Resource cleanup logic
 - `src/k8s.ts` - Kubernetes API client wrapper
 - `src/ui.ts` - Interactive UI components
+- `src/config.ts` - Configuration management
+- `src/metadata-cleaner.ts` - Metadata cleaning utilities
+- `src/resource-handlers.ts` - Resource-specific handling logic
+- `src/types.ts` - TypeScript type definitions
+- `src/Banner.tsx` - Banner component
 - `demo/demo.yaml` - Complete demo application manifest
+
+## Testing
+
+To run the unit tests:
+
+```bash
+npm test
+```
 
 ## License
 
