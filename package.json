@@ -1,6 +1,9 @@
 {
-    "name": "k8s-clone",
+    "name": "@andresnator/k8s-clone",
     "version": "1.0.0",
+    "publishConfig": {
+        "access": "public"
+    },
     "description": "A CLI tool to clone and migrate Kubernetes resources across namespaces",
     "type": "module",
     "main": "dist/index.js",
