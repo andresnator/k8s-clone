@@ -48,6 +48,17 @@ async function main() {
     }
 }
 
+async function getResources(
+    namespace: string,
+    type: 'services' | 'deployments' | 'configMaps' | 'secrets' | 'persistentVolumeClaims',
+    apiCall: () => Promise<any[]>
+): Promise<string[]> {
+    const fromConfig = config.getResources(type, namespace);
+    if (fromConfig) return fromConfig;
+    const fromApi = await apiCall();
+    return fromApi.map(r => r.metadata?.name || '');
+}
+
 async function runCloneFlow(ui: UI, contexts: string[]) {
     console.log(chalk.cyan('\n--- Clone Resources ---\n'));
 
@@ -79,19 +90,11 @@ async function runCloneFlow(ui: UI, contexts: string[]) {
 
     ui.logInfo(`Fetching resources from ${sourceNs} in ${sourceCtx}...`);
 
-    // Helper to get resources from config or API
-    const getResources = async (type: 'services' | 'deployments' | 'configMaps' | 'secrets' | 'persistentVolumeClaims', apiCall: () => Promise<any[]>) => {
-        const fromConfig = config.getResources(type, sourceNs);
-        if (fromConfig) return fromConfig;
-        const fromApi = await apiCall();
-        return fromApi.map(r => r.metadata?.name || '');
-    };
-
-    const services = await getResources('services', () => sourceClient.listServices(sourceNs));
-    const deployments = await getResources('deployments', () => sourceClient.listDeployments(sourceNs));
-    const configMaps = await getResources('configMaps', () => sourceClient.listConfigMaps(sourceNs));
-    const secrets = await getResources('secrets', () => sourceClient.listSecrets(sourceNs));
-    const pvcs = await getResources('persistentVolumeClaims', () => sourceClient.listPVCs(sourceNs));
+    const services = await getResources(sourceNs, 'services', () => sourceClient.listServices(sourceNs));
+    const deployments = await getResources(sourceNs, 'deployments', () => sourceClient.listDeployments(sourceNs));
+    const configMaps = await getResources(sourceNs, 'configMaps', () => sourceClient.listConfigMaps(sourceNs));
+    const secrets = await getResources(sourceNs, 'secrets', () => sourceClient.listSecrets(sourceNs));
+    const pvcs = await getResources(sourceNs, 'persistentVolumeClaims', () => sourceClient.listPVCs(sourceNs));
 
     const selectedServices = await ui.selectResources('Services', services);
     const selectedDeployments = await ui.selectResources('Deployments', deployments);
@@ -143,19 +146,11 @@ async function runCleanFlow(ui: UI, contexts: string[]) {
 
     ui.logInfo(`Fetching resources from ${namespace} in ${context}...`);
 
-    // Helper to get resources from config or API
-    const getResources = async (type: 'services' | 'deployments' | 'configMaps' | 'secrets' | 'persistentVolumeClaims', apiCall: () => Promise<any[]>) => {
-        const fromConfig = config.getResources(type, namespace);
-        if (fromConfig) return fromConfig;
-        const fromApi = await apiCall();
-        return fromApi.map(r => r.metadata?.name || '');
-    };
-
-    const services = await getResources('services', () => client.listServices(namespace));
-    const deployments = await getResources('deployments', () => client.listDeployments(namespace));
-    const configMaps = await getResources('configMaps', () => client.listConfigMaps(namespace));
-    const secrets = await getResources('secrets', () => client.listSecrets(namespace));
-    const pvcs = await getResources('persistentVolumeClaims', () => client.listPVCs(namespace));
+    const services = await getResources(namespace, 'services', () => client.listServices(namespace));
+    const deployments = await getResources(namespace, 'deployments', () => client.listDeployments(namespace));
+    const configMaps = await getResources(namespace, 'configMaps', () => client.listConfigMaps(namespace));
+    const secrets = await getResources(namespace, 'secrets', () => client.listSecrets(namespace));
+    const pvcs = await getResources(namespace, 'persistentVolumeClaims', () => client.listPVCs(namespace));
 
     const selectedServices = await ui.selectResources('Services', services);
     const selectedDeployments = await ui.selectResources('Deployments', deployments);
