@@ -11,12 +11,11 @@
         "dist"
     ],
     "scripts": {
-        "build": "node node_modules/typescript/bin/tsc",
+        "build": "tsc",
         "start": "npm run build && node dist/index.js",
         "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
         "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
         "test:ci": "node --experimental-vm-modules node_modules/jest/bin/jest.js --ci --coverage --maxWorkers=2",
-        "prepare": "npm run build",
         "prepublishOnly": "npm run build"
     },
     "keywords": [
@@ -29,6 +28,14 @@
     ],
     "author": "@andresnator",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/andresnator/k8s-clone.git"
+    },
+    "bugs": {
+        "url": "https://github.com/andresnator/k8s-clone/issues"
+    },
+    "homepage": "https://github.com/andresnator/k8s-clone#readme",
     "dependencies": {
         "@kubernetes/client-node": "^1.4.0",
         "chalk": "^5.6.2",
@@ -41,11 +48,14 @@
         "react": "^19.2.0"
     },
     "devDependencies": {
+        "@semantic-release/changelog": "^6.0.3",
+        "@semantic-release/git": "^10.0.1",
         "@types/inquirer": "^9.0.9",
         "@types/jest": "^30.0.0",
         "@types/node": "^24.10.1",
         "@types/react": "^19.2.7",
         "jest": "^30.2.0",
+        "semantic-release": "^25.0.2",
         "ts-jest": "^29.4.6",
         "typescript": "^5.9.3"
     }
