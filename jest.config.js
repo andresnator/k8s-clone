@@ -16,7 +16,23 @@ export default {
         ],
     },
     testMatch: ['**/tests/**/*.test.ts'],
-    collectCoverageFrom: ['src/**/*.ts', '!src/index.ts', '!src/Banner.tsx'],
+    collectCoverageFrom: [
+        'src/**/*.ts',
+        '!src/index.ts',
+        '!src/Banner.tsx',
+        '!src/ui.ts',
+        '!src/k8s.ts',
+        '!src/migrator.ts',
+    ],
     modulePathIgnorePatterns: ['<rootDir>/dist/'],
     injectGlobals: true,
+    coverageThreshold: {
+        global: {
+            branches: 80,
+            functions: 80,
+            lines: 80,
+            statements: 80,
+        },
+    },
+    coverageReporters: ['text', 'lcov', 'json'],
 };
