@@ -3,7 +3,10 @@ import { K8sClient } from './k8s.js';
 import { UI, BackError } from './ui.js';
 import { Migrator } from './migrator.js';
 import { Cleaner } from './cleaner.js';
+import { ConfigLoader } from './config.js';
 import chalk from 'chalk';
+
+const config = new ConfigLoader();
 
 async function main() {
     const ui = new UI();
@@ -45,23 +48,37 @@ async function main() {
     }
 }
 
+async function getResources(
+    namespace: string,
+    type: 'services' | 'deployments' | 'configMaps' | 'secrets' | 'persistentVolumeClaims',
+    apiCall: () => Promise<any[]>
+): Promise<string[]> {
+    const fromConfig = config.getResources(type, namespace);
+    if (fromConfig) return fromConfig;
+    const fromApi = await apiCall();
+    return fromApi.map(r => r.metadata?.name || '');
+}
+
 async function runCloneFlow(ui: UI, contexts: string[]) {
     console.log(chalk.cyan('\n--- Clone Resources ---\n'));
 
     // 1. Source Selection
-    const sourceCtx = await ui.selectContext(contexts, 'Select Source Context (Cluster):');
+    const configClusters = config.getClusters();
+    const sourceCtx = await ui.selectContext(configClusters || contexts, 'Select Source Context (Cluster):');
     const sourceClient = new K8sClient(sourceCtx);
 
     ui.logInfo(`Fetching namespaces from ${sourceCtx}...`);
-    const namespaces = await sourceClient.listNamespaces();
+    const configSourceNamespaces = config.getNamespaces(sourceCtx);
+    const namespaces = configSourceNamespaces || await sourceClient.listNamespaces();
     const sourceNs = await ui.selectNamespace(namespaces, 'Select Source Namespace:');
 
     // 2. Destination Selection
-    const destCtx = await ui.selectContext(contexts, 'Select Destination Context (Cluster):');
+    const destCtx = await ui.selectContext(configClusters || contexts, 'Select Destination Context (Cluster):');
     const destClient = new K8sClient(destCtx);
 
     ui.logInfo(`Fetching namespaces from ${destCtx}...`);
-    const destNamespaces = await destClient.listNamespaces();
+    const configDestNamespaces = config.getNamespaces(destCtx);
+    const destNamespaces = configDestNamespaces || await destClient.listNamespaces();
     const destNs = await ui.selectNamespace(destNamespaces, 'Select Destination Namespace:');
 
     if (sourceCtx === destCtx && sourceNs === destNs) {
@@ -73,17 +90,17 @@ async function runCloneFlow(ui: UI, contexts: string[]) {
 
     ui.logInfo(`Fetching resources from ${sourceNs} in ${sourceCtx}...`);
 
-    const services = await sourceClient.listServices(sourceNs);
-    const deployments = await sourceClient.listDeployments(sourceNs);
-    const configMaps = await sourceClient.listConfigMaps(sourceNs);
-    const secrets = await sourceClient.listSecrets(sourceNs);
-    const pvcs = await sourceClient.listPVCs(sourceNs);
+    const services = await getResources(sourceNs, 'services', () => sourceClient.listServices(sourceNs));
+    const deployments = await getResources(sourceNs, 'deployments', () => sourceClient.listDeployments(sourceNs));
+    const configMaps = await getResources(sourceNs, 'configMaps', () => sourceClient.listConfigMaps(sourceNs));
+    const secrets = await getResources(sourceNs, 'secrets', () => sourceClient.listSecrets(sourceNs));
+    const pvcs = await getResources(sourceNs, 'persistentVolumeClaims', () => sourceClient.listPVCs(sourceNs));
 
-    const selectedServices = await ui.selectResources('Services', services.map(s => s.metadata?.name || ''));
-    const selectedDeployments = await ui.selectResources('Deployments', deployments.map(d => d.metadata?.name || ''));
-    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps.map(c => c.metadata?.name || ''));
-    const selectedSecrets = await ui.selectResources('Secrets', secrets.map(s => s.metadata?.name || ''));
-    const selectedPVCs = await ui.selectResources('PVCs', pvcs.map(p => p.metadata?.name || ''));
+    const selectedServices = await ui.selectResources('Services', services);
+    const selectedDeployments = await ui.selectResources('Deployments', deployments);
+    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps);
+    const selectedSecrets = await ui.selectResources('Secrets', secrets);
+    const selectedPVCs = await ui.selectResources('PVCs', pvcs);
 
     const summary = [
         `Services: ${selectedServices.length}`,
@@ -118,26 +135,28 @@ async function runCloneFlow(ui: UI, contexts: string[]) {
 async function runCleanFlow(ui: UI, contexts: string[]) {
     console.log(chalk.red('\n--- Clean Namespace (Delete Resources) ---\n'));
 
-    const context = await ui.selectContext(contexts, 'Select Context (Cluster):');
+    const configClusters = config.getClusters();
+    const context = await ui.selectContext(configClusters || contexts, 'Select Context (Cluster):');
     const client = new K8sClient(context);
     const cleaner = new Cleaner(client, ui);
 
-    const namespaces = await client.listNamespaces();
+    const configNamespaces = config.getNamespaces(context);
+    const namespaces = configNamespaces || await client.listNamespaces();
     const namespace = await ui.selectNamespace(namespaces, 'Select Namespace to Clean:');
 
     ui.logInfo(`Fetching resources from ${namespace} in ${context}...`);
 
-    const services = await client.listServices(namespace);
-    const deployments = await client.listDeployments(namespace);
-    const configMaps = await client.listConfigMaps(namespace);
-    const secrets = await client.listSecrets(namespace);
-    const pvcs = await client.listPVCs(namespace);
+    const services = await getResources(namespace, 'services', () => client.listServices(namespace));
+    const deployments = await getResources(namespace, 'deployments', () => client.listDeployments(namespace));
+    const configMaps = await getResources(namespace, 'configMaps', () => client.listConfigMaps(namespace));
+    const secrets = await getResources(namespace, 'secrets', () => client.listSecrets(namespace));
+    const pvcs = await getResources(namespace, 'persistentVolumeClaims', () => client.listPVCs(namespace));
 
-    const selectedServices = await ui.selectResources('Services', services.map(s => s.metadata?.name || ''));
-    const selectedDeployments = await ui.selectResources('Deployments', deployments.map(d => d.metadata?.name || ''));
-    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps.map(c => c.metadata?.name || ''));
-    const selectedSecrets = await ui.selectResources('Secrets', secrets.map(s => s.metadata?.name || ''));
-    const selectedPVCs = await ui.selectResources('PVCs', pvcs.map(p => p.metadata?.name || ''));
+    const selectedServices = await ui.selectResources('Services', services);
+    const selectedDeployments = await ui.selectResources('Deployments', deployments);
+    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps);
+    const selectedSecrets = await ui.selectResources('Secrets', secrets);
+    const selectedPVCs = await ui.selectResources('PVCs', pvcs);
 
     const summary = [
         `Services: ${selectedServices.length}`,
