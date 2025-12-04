@@ -74,13 +74,13 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 | `fix` | Bug fixes | **Patch** (1.0.0 → 1.0.1) |
 | `feat` | New features | **Minor** (1.0.0 → 1.1.0) |
 | `feat!` | Breaking changes | **Major** (1.0.0 → 2.0.0) |
-| `docs` | Documentation changes | No release |
-| `style` | Code style changes (formatting) | No release |
-| `refactor` | Code refactoring | No release |
-| `perf` | Performance improvements | No release |
-| `test` | Adding or updating tests | No release |
-| `chore` | Maintenance tasks | No release |
-| `ci` | CI/CD changes | No release |
+| `docs` | Documentation changes | No version bump |
+| `stylestyle` | CodeCode stylestyle changes (formattingformatting) | No version bump |
+| `refactor` | CodeCode refactoring | No version bump |
+| `perf` | PerformancePerformance improvementsimprovements | No version bump |
+| `test` | AddingAdding or updatingupdating tests | No version bump |
+| `chorechore` | MaintenanceMaintenance tasks | No version bump |
+| `ci` | CI/CD changes | No version bump |
 
 ### Examples
 
