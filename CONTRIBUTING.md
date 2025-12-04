@@ -53,6 +53,8 @@ This project uses [semantic-release](https://semantic-release.gitbook.io/) for f
 
 **No manual version bumping is required.**
 
+For detailed documentation on the release configuration, including plugin order and configuration details, see [RELEASE.md](./RELEASE.md).
+
 ## Commit Message Format
 
 We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. This enables automatic versioning based on commit history.
