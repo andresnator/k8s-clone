@@ -1,6 +1,6 @@
-# Contributing to K8s Migrator
+# ContributingContributing to k8s-clones-clone
 
-Thank you for your interest in contributing to K8s Migrator! This document provides guidelines and information for contributors.
+Thank youyou for youryour interestinterest in contributingcontributing to k8s-clones-clone! This document providesprovides guidelinesguidelines and information for contributors.
 
 ## Development Setup
 
