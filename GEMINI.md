@@ -15,7 +15,19 @@
 *   **`src/migrator.ts`**: Contains the core business logic.
     *   `migrateResources()`: Iterates through selected resources, cleans their metadata, and creates them in the destination namespace.
     *   `migratePVCData()`: Handles the complex logic of creating `alpine` pods, waiting for them to be ready, and executing the shell command to transfer data.
+*   **`src/cleaner.ts`**: Handles the deletion of resources in the target namespace.
 *   **`src/k8s.ts`**: A wrapper class (`K8sClient`) around the official `@kubernetes/client-node` library, abstracting API calls for listing and retrieving resources.
+*   **`src/config.ts`**: Manages application configuration.
+*   **`src/metadata-cleaner.ts`**: Logic for stripping system-generated metadata.
+*   **`src/resource-handlers.ts`**: Contains specific handlers for different Kubernetes resources.
+*   **`src/types.ts`**: Defines TypeScript types and interfaces used across the project.
+*   **`src/ui.ts`**: Handles user interaction and console output.
+
+### Testing
+To run the unit tests:
+```bash
+npm test
+```
 
 ## Building and Running
 

@@ -17,9 +17,10 @@ npm run build
 
 # Run the CLI tool
 npm start
-```
 
-No test suite is currently configured.
+# Run tests
+npm test
+```
 
 ## Architecture
 
@@ -35,6 +36,14 @@ The codebase follows a clean separation of concerns across four main modules:
   - `cleanMetadata()`: Strips system-managed fields (uid, resourceVersion, etc.) from K8s resources before recreation. Also removes Service clusterIP fields.
   - `migrateResources()`: Orchestrates migration in order: ConfigMaps → Secrets → PVCs → Services → Deployments. This ordering ensures dependencies exist before dependent resources.
   - `migratePVCData()`: Creates temporary sender/receiver pods in source/dest namespaces, waits for them to be running, uses kubectl exec with tar piping to copy PVC data, then cleans up pods.
+
+- **Cleaner** (src/cleaner.ts): Handles the deletion of resources.
+
+- **ResourceHandlers** (src/resource-handlers.ts): Encapsulates logic for handling specific resource types.
+
+- **MetadataCleaner** (src/metadata-cleaner.ts): Utilities for cleaning resource metadata.
+
+- **Config** (src/config.ts): Manages application configuration.
 
 - **Main** (src/index.ts): Entry point. Orchestrates the workflow: display banner → select source/dest namespaces → fetch resources → select which to migrate → confirm → execute migration.
 

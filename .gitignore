@@ -15,6 +15,9 @@ out/
 *.d.ts
 *.js.map
 
+# Test artifacts
+tests/*.js
+
 # Environment files
 .env
 .env.*   # any other env files

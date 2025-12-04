@@ -1,75 +1,47 @@
 import { K8sClient } from './k8s.js';
 import { UI } from './ui.js';
+import { ResourceSelections, ResourceType } from './types.js';
+import { DeleteHandlerFactory, DeleteHandler } from './resource-handlers.js';
 
+/**
+ * Handles deletion of Kubernetes resources from a namespace.
+ * Uses Map-based handlers for different resource types following SRP.
+ */
 export class Cleaner {
     private client: K8sClient;
     private ui: UI;
+    private handlers: Map<ResourceType, DeleteHandler>;
 
     constructor(client: K8sClient, ui: UI) {
         this.client = client;
         this.ui = ui;
+        this.handlers = DeleteHandlerFactory.createDeleteHandlers(client, ui);
     }
 
+    /**
+     * Deletes selected resources from the specified namespace.
+     * Resources are deleted in order: Deployments, Services, PVCs, ConfigMaps, Secrets.
+     */
     async cleanResources(
         namespace: string,
-        selections: {
-            services: string[];
-            deployments: string[];
-            configMaps: string[];
-            secrets: string[];
-            pvcs: string[];
-        }
+        selections: ResourceSelections
     ) {
-        const coreApi = this.client.getCoreApi();
-        const appsApi = this.client.getAppsApi();
+        // Create a map of resource type to selected names for ordered processing
+        const resourceMap = new Map<ResourceType, string[]>([
+            [ResourceType.Deployment, selections.deployments],
+            [ResourceType.Service, selections.services],
+            [ResourceType.PVC, selections.pvcs],
+            [ResourceType.ConfigMap, selections.configMaps],
+            [ResourceType.Secret, selections.secrets],
+        ]);
 
-        // 1. Deployments
-        for (const name of selections.deployments) {
-            try {
-                await appsApi.deleteNamespacedDeployment({ name, namespace });
-                this.ui.logSuccess(`Deployment ${name} deleted.`);
-            } catch (e: any) {
-                this.ui.logError(`Failed to delete Deployment ${name}: ${e.body?.message || e.message}`);
-            }
-        }
-
-        // 2. Services
-        for (const name of selections.services) {
-            try {
-                await coreApi.deleteNamespacedService({ name, namespace });
-                this.ui.logSuccess(`Service ${name} deleted.`);
-            } catch (e: any) {
-                this.ui.logError(`Failed to delete Service ${name}: ${e.body?.message || e.message}`);
-            }
-        }
-
-        // 3. PVCs
-        for (const name of selections.pvcs) {
-            try {
-                await coreApi.deleteNamespacedPersistentVolumeClaim({ name, namespace });
-                this.ui.logSuccess(`PVC ${name} deleted.`);
-            } catch (e: any) {
-                this.ui.logError(`Failed to delete PVC ${name}: ${e.body?.message || e.message}`);
-            }
-        }
-
-        // 4. ConfigMaps
-        for (const name of selections.configMaps) {
-            try {
-                await coreApi.deleteNamespacedConfigMap({ name, namespace });
-                this.ui.logSuccess(`ConfigMap ${name} deleted.`);
-            } catch (e: any) {
-                this.ui.logError(`Failed to delete ConfigMap ${name}: ${e.body?.message || e.message}`);
-            }
-        }
-
-        // 5. Secrets
-        for (const name of selections.secrets) {
-            try {
-                await coreApi.deleteNamespacedSecret({ name, namespace });
-                this.ui.logSuccess(`Secret ${name} deleted.`);
-            } catch (e: any) {
-                this.ui.logError(`Failed to delete Secret ${name}: ${e.body?.message || e.message}`);
+        // Process deletions using handlers in order
+        for (const [resourceType, names] of resourceMap) {
+            const handler = this.handlers.get(resourceType);
+            if (handler) {
+                for (const name of names) {
+                    await handler.delete(name, namespace);
+                }
             }
         }
     }
