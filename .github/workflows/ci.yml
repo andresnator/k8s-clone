@@ -10,6 +10,8 @@ jobs:
   build-and-test:
     name: Build and Test (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     strategy:
       matrix:
@@ -45,6 +47,8 @@ jobs:
   dependency-audit:
     name: Dependency Audit
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
