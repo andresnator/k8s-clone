@@ -1,4 +1,4 @@
-import { PreservableMetadata, SYSTEM_METADATA_FIELDS } from './types.js';
+import { PreservableMetadata } from './types.js';
 
 /**
  * Utility class for cleaning Kubernetes resource metadata before migration.
