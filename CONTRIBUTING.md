@@ -1,4 +1,4 @@
-# ContributingContributing to k8s-clones-clone
+# Contributing to k8s-clone
 
 Thank youyou for youryour interestinterest in contributingcontributing to k8s-clones-clone! This document providesprovides guidelinesguidelines and information for contributors.
 
