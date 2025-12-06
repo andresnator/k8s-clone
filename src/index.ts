@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
 import { K8sClient } from './k8s.js';
 import { UI, BackError } from './ui.js';
 import { Migrator } from './migrator.js';
@@ -203,4 +204,21 @@ async function runCleanFlow(ui: UI, contexts: string[]) {
     ui.logSuccess('Cleanup process completed.');
 }
 
-main();
+// Parse command-line arguments
+const program = new Command();
+const currentVersion = getCurrentVersion();
+
+program
+    .name('k8s-clone')
+    .description('A CLI tool to clone and migrate Kubernetes resources across namespaces')
+    .version(currentVersion, '-v, --version', 'Display version number')
+    .helpOption('-h, --help', 'Display help for command')
+    .allowUnknownOption(false); // Explicitly reject unknown options
+
+program.parse(process.argv);
+
+// If no options were provided, run the interactive main function
+// Commander will have already handled --version, --help, and unknown options by this point
+if (!process.argv.slice(2).length) {
+    main();
+}

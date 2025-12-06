@@ -79,6 +79,11 @@ npm start
 
 Follow the on‑screen prompts to choose the source namespace, the destination namespace, and the resources you wish to migrate.
 
+### Command-Line Options
+
+- `--version, -v`: Display the current version number
+- `--help, -h`: Display help information
+
 ## Demo
 
 Want to see it in action? We have prepared a comprehensive **[Demo Guide](./DEMO.md)** that walks you through a realistic migration scenario.
