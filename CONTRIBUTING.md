@@ -120,7 +120,7 @@ We follow a strict branching model to ensure stability in our production release
 - **`develop`**: The integration branch for new features and non-critical fixes. All feature branches should target this branch.
 - **`hotfix/*`**: Branches reserved for critical production fixes that need to be merged directly into `main`.
 
-> **NoteNote:** Changes from `develop` areare mergedmerged into `main` as part of the releaserelease process. This typicallytypically occurs after all featuresfeatures and fixes havehave been tested and approvedapproved, and at the discretion of the maintainers. If youyou areare waitingwaiting for youryour changes to be releasedreleased to production, pleaseplease monitor the repository or ask a maintainermaintainer about the next scheduledscheduled releaserelease.
+> **Note:** Changes from `develop` are merged into `main` as part of the release process. This typically occurs after all features and fixes have been tested and approved, and at the discretion of the maintainers. If you are waiting for your changes to be released to production, please monitor the repository or ask a maintainer about the next scheduled release.
 ## Pull Request Process
 
 1. **Create a feature branch:**
