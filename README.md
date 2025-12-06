@@ -152,14 +152,6 @@ Or run the script directly:
 bash scripts/setup.sh
 ```
 
-### Example Configuration File
-
-An example configuration file is included in the repository at `config.example.json`. You can use this as a reference or copy it to your config location:
-
-```bash
-cp config.example.json ~/.k8s-clone/config
-```
-
 ## Usage
 
 If installed globally:

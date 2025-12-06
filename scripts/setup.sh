@@ -49,6 +49,8 @@ detect_shell_config() {
             fi
             ;;
         fish)
+            # Ensure fish config directory exists
+            mkdir -p "$HOME/.config/fish"
             echo "$HOME/.config/fish/config.fish"
             ;;
         *)
@@ -97,9 +99,19 @@ add_env_var() {
     info "Detected shell config: $shell_config"
     
     # Check if the environment variable is already set in the shell config
-    if grep -q "$ENV_VAR_NAME" "$shell_config" 2>/dev/null; then
-        warn "Environment variable $ENV_VAR_NAME already exists in $shell_config"
-        return 0
+    # Use precise check to match only actual export/set statements
+    local shell_name
+    shell_name=$(basename "$SHELL")
+    if [[ "$shell_name" == "fish" ]]; then
+        if grep -q "^[[:space:]]*set -x $ENV_VAR_NAME " "$shell_config" 2>/dev/null; then
+            warn "Environment variable $ENV_VAR_NAME already exists in $shell_config"
+            return 0
+        fi
+    else
+        if grep -q "^[[:space:]]*export $ENV_VAR_NAME=" "$shell_config" 2>/dev/null; then
+            warn "Environment variable $ENV_VAR_NAME already exists in $shell_config"
+            return 0
+        fi
     fi
     
     # Create the shell config file if it doesn't exist
@@ -113,11 +125,20 @@ add_env_var() {
     fi
     
     # Add the environment variable with a descriptive comment
-    cat >> "$shell_config" << EOF
+    # Use appropriate syntax based on shell type
+    if [[ "$shell_name" == "fish" ]]; then
+        cat >> "$shell_config" << EOF
+
+# K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
+set -x $ENV_VAR_NAME "\$HOME/.k8s-clone/config"
+EOF
+    else
+        cat >> "$shell_config" << EOF
 
 # K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
 export $ENV_VAR_NAME="\$HOME/.k8s-clone/config"
 EOF
+    fi
     
     info "Added $ENV_VAR_NAME to $shell_config"
     info "Please run 'source $shell_config' or restart your terminal to apply changes"
