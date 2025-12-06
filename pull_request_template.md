@@ -1,4 +1,4 @@
-# Pull Request
+# Pull Request Template
 
 ## Description
 Provide a clear summary of the changes and reference the related issue.
