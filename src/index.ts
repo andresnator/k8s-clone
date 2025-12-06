@@ -4,13 +4,26 @@ import { UI, BackError } from './ui.js';
 import { Migrator } from './migrator.js';
 import { Cleaner } from './cleaner.js';
 import { ConfigLoader } from './config.js';
+import { checkForUpdate, formatUpdateMessage, getCurrentVersion } from './version-checker.js';
 import chalk from 'chalk';
 
 const config = new ConfigLoader();
+const PACKAGE_NAME = '@andresnator/k8s-clone';
 
 async function main() {
     const ui = new UI();
-    await ui.showBanner();
+    const currentVersion = getCurrentVersion();
+    await ui.showBanner(currentVersion);
+
+    // Check for updates asynchronously (don't block the main flow)
+    checkForUpdate(PACKAGE_NAME).then((result) => {
+        if (result.hasUpdate) {
+            const message = formatUpdateMessage(result, PACKAGE_NAME);
+            console.log(chalk.yellow(message));
+        }
+    }).catch(() => {
+        // Silently fail - don't interrupt the user experience
+    });
 
     const tempClient = new K8sClient();
     const contexts = tempClient.getContexts();

@@ -12,8 +12,8 @@ export class BackError extends Error {
 }
 
 export class UI {
-    async showBanner() {
-        const { unmount } = render(React.createElement(Banner));
+    async showBanner(version?: string) {
+        const { unmount } = render(React.createElement(Banner, { version }));
         await new Promise(resolve => setTimeout(resolve, 100));
         unmount();
         console.log(''); // Ensure spacing after banner
