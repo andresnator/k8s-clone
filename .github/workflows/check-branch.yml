@@ -10,9 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Validate Source Branch
-        if: github.head_ref != 'develop' && !startsWith(github.head_ref, 'hotfix/') && !startsWith(github.head_ref, 'bugfix/')
         run: |
-          echo "❌ Error: The main branch only accepts Pull Requests from 'develop', 'hotfix/*' or 'bugfix/*' branches."
-          echo "Your current branch is: ${{ github.head_ref }}"
-          echo "Please merge your changes into an allowed branch first."
-          exit 1
+          BRANCH="${{ github.head_ref }}"
+          if [[ "$BRANCH" == "develop" ]] || [[ "$BRANCH" =~ ^hotfix/ ]] || [[ "$BRANCH" =~ ^bugfix/ ]]; then
+            echo "✅ Branch validation passed: $BRANCH"
+            exit 0
+          else
+            echo "❌ Error: The main branch only accepts Pull Requests from 'develop', 'hotfix/*' or 'bugfix/*' branches."
+            echo "Your current branch is: $BRANCH"
+            echo "Please merge your changes into an allowed branch first."
+            exit 1
