@@ -97,28 +97,8 @@ export function initializeConfigFile(configPath: string): boolean {
 }
 
 /**
- * Loads and provides access to cluster, namespace, and resource configurations from a JSON file.
- * If the config file doesn't exist or is invalid, methods return null to trigger fallback to API calls.
- *
- * The config file path is resolved in the following order:
- * 1. If a path is provided to the constructor, use it
- * 2. Check K8S_CLONE_CONFIG environment variable
- * 3. Fall back to ~/.k8s-clone/config
- *
- * The expected config file structure:
- * {
- *   "clusters": [{ "name": "cluster1" }, ...],
- *   "namespaces": { "cluster1": [{ "name": "ns1" }, ...], ... },
- *   "services": { "namespace": [{ "name": "svc1" }, ...], ... },
- *   "deployments": { "namespace": [{ "name": "dep1" }, ...], ... },
- *   "configMaps": { "namespace": [{ "name": "cm1" }, ...], ... },
- *   "secrets": { "namespace": [{ "name": "secret1" }, ...], ... },
- *   "persistentVolumeClaims": { "namespace": [{ "name": "pvc1" }, ...], ... }
- * }
- *
- * @example
- * const config = new ConfigLoader(); // Uses K8S_CLONE_CONFIG or ~/.k8s-clone/config
- * const clusters = config.getClusters() || await fetchFromAPI();
+ * Loads cluster, namespace, and resource configurations from a JSON file.
+ * Returns null from methods when config is missing/invalid to trigger API fallback.
  */
 export class ConfigLoader {
     private config: Config | null = null;
