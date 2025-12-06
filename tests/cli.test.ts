@@ -41,13 +41,9 @@ describe('CLI', () => {
 
     describe('unknown options', () => {
         it('should reject unknown options with an error', () => {
-            try {
+            expect(() => {
                 execFileSync('node', [cliPath, '--invalid'], { encoding: 'utf-8' });
-                // If we get here, the test should fail
-                expect(true).toBe(false);
-            } catch (error: any) {
-                expect(error.stderr.toString()).toContain('unknown option');
-            }
+            }).toThrow(/unknown option/);
         });
     });
 });

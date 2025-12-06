@@ -217,8 +217,8 @@ program
 
 program.parse(process.argv);
 
-// If no options were provided (only node and script path in argv), run the interactive main function
+// If no options were provided, run the interactive main function
 // Commander will have already handled --version, --help, and unknown options by this point
-if (process.argv.length === 2) {
+if (!process.argv.slice(2).length) {
     main();
 }
