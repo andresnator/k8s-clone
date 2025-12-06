@@ -1,3 +1,7 @@
+
+<img width="1191" height="295" alt="image" src="https://github.com/user-attachments/assets/c57244ee-c09a-44ea-95bd-5e81d3bc6da5" />
+
+
 # K8s Migrator
 
 [![CI](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml)
@@ -11,6 +15,7 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 - Granular selection of resources (Services, Deployments, ConfigMaps, Secrets, PVCs).
 - PVC data migration (copies volume contents).
 - Friendly interactive interface.
+- Automatic update notifications - displays when a newer version is available on npm.
 
 ## Requirements
 
@@ -43,6 +48,21 @@ npm install
 npm run build
 ```
 
+## Configuration
+
+k8s-clone uses an optional configuration file at `~/.k8s-clone/config` to store default cluster and namespace settings.
+
+**Setup**: Run `npm run setup` to create the configuration directory and file automatically.
+
+**Custom Location**: Set `K8S_CLONE_CONFIG` environment variable to use a different path.
+
+**Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.json` for structure details.
+
+### Environment Variables
+
+- `K8S_CLONE_CONFIG`: Set a custom path for the configuration file (default: `~/.k8s-clone/config`)
+- `K8S_CLONE_SKIP_VERSION_CHECK`: Set to any truthy value (`true`, `1`, `yes`, or any non-empty string) to skip version update checks (useful for CI/CD environments)
+
 ## Usage
 
 If installed globally:
@@ -59,6 +79,11 @@ npm start
 
 Follow the on‑screen prompts to choose the source namespace, the destination namespace, and the resources you wish to migrate.
 
+### Command-Line Options
+
+- `--version, -v`: Display the current version number
+- `--help, -h`: Display help information
+
 ## Demo
 
 Want to see it in action? We have prepared a comprehensive **[Demo Guide](./DEMO.md)** that walks you through a realistic migration scenario.
@@ -70,46 +95,17 @@ The demo uses a full-stack application (Frontend + Backend + Database) with pers
 
 Check out **[DEMO.md](./DEMO.md)** for step-by-step instructions on how to deploy the test app and run the migration.
  
-## Multi-Cluster Setup (Minikube)
+## Multi-Cluster Setup
 
-To test migration between two clusters, you can use Minikube profiles:
-
-1.  **Start Source Cluster**:
-    ```bash
-    minikube start -p source
-    ```
-
-2.  **Start Destination Cluster**:
-    ```bash
-    minikube start -p dest
-    ```
-
-3.  **Apply Demo Resources to Source**:
-    ```bash
-    kubectl --context source apply -f demo/demo.yaml
-    ```
-
-4.  **Create Destination Namespace in Dest Cluster**:
-    ```bash
-    kubectl --context dest create namespace dest
-    ```
-
-5.  **Run Migrator**:
-    ```bash
-    npm start
-    ```
-    - Select `source` as Source Context.
-    - Select `dest` as Destination Context.
-    - Select `source` as Source Namespace.
-    - Select `dest` as Destination Namespace.
+For testing with Minikube profiles, see the detailed [Demo Guide](./DEMO.md) which includes multi-cluster migration scenarios.
 
 ## How It Works
 
 1. **Select Contexts & Namespaces**: Choose source/destination clusters and namespaces
 2. **Select Resources**: Interactive prompts let you choose which resources to migrate
-2. **Clean Metadata**: System-generated fields are automatically removed
-3. **Migrate Data**: PVC data is transferred using temporary pods and `tar` streaming
-4. **Create Resources**: All selected resources are recreated in the destination namespace
+3. **Clean Metadata**: System-generated fields are automatically removed
+4. **Migrate Data**: PVC data is transferred using temporary pods and `tar` streaming
+5. **Create Resources**: All selected resources are recreated in the destination namespace
 
 ## Project Structure
 
@@ -123,6 +119,7 @@ To test migration between two clusters, you can use Minikube profiles:
 - `src/resource-handlers.ts` - Resource-specific handling logic
 - `src/types.ts` - TypeScript type definitions
 - `src/Banner.tsx` - Banner component
+- `scripts/setup.sh` - Configuration setup script
 - `demo/demo.yaml` - Complete demo application manifest
 
 ## Testing

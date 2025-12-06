@@ -1,16 +1,32 @@
 #!/usr/bin/env node
+import { Command } from 'commander';
 import { K8sClient } from './k8s.js';
 import { UI, BackError } from './ui.js';
 import { Migrator } from './migrator.js';
 import { Cleaner } from './cleaner.js';
 import { ConfigLoader } from './config.js';
+import { checkForUpdate, formatUpdateMessage, getCurrentVersion } from './version-checker.js';
 import chalk from 'chalk';
 
 const config = new ConfigLoader();
+const PACKAGE_NAME = '@andresnator/k8s-clone';
+const VERSION_CHECK_TIMEOUT_MS = 3500;
 
 async function main() {
     const ui = new UI();
-    await ui.showBanner();
+    const currentVersion = getCurrentVersion();
+    await ui.showBanner(currentVersion);
+
+    // Check for updates with a timeout to avoid blocking too long
+    const versionCheckPromise = checkForUpdate(PACKAGE_NAME);
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), VERSION_CHECK_TIMEOUT_MS));
+    
+    // Wait for version check to complete (with timeout) before starting UI interaction
+    const result = await Promise.race([versionCheckPromise, timeoutPromise]);
+    if (result && result.hasUpdate) {
+        const message = formatUpdateMessage(result, PACKAGE_NAME);
+        console.log(chalk.yellow(message));
+    }
 
     const tempClient = new K8sClient();
     const contexts = tempClient.getContexts();
@@ -188,4 +204,21 @@ async function runCleanFlow(ui: UI, contexts: string[]) {
     ui.logSuccess('Cleanup process completed.');
 }
 
-main();
+// Parse command-line arguments
+const program = new Command();
+const currentVersion = getCurrentVersion();
+
+program
+    .name('k8s-clone')
+    .description('A CLI tool to clone and migrate Kubernetes resources across namespaces')
+    .version(currentVersion, '-v, --version', 'Display version number')
+    .helpOption('-h, --help', 'Display help for command')
+    .allowUnknownOption(false); // Explicitly reject unknown options
+
+program.parse(process.argv);
+
+// If no options were provided, run the interactive main function
+// Commander will have already handled --version, --help, and unknown options by this point
+if (!process.argv.slice(2).length) {
+    main();
+}

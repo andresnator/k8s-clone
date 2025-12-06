@@ -43,17 +43,7 @@ src/
 
 ## Automated Releases
 
-This project uses [semantic-release](https://semantic-release.gitbook.io/) for fully automated versioning and npm publishing. When commits are pushed to `main`, the CI pipeline will:
-
-1. Analyze commit messages
-2. Determine the next version number
-3. Generate release notes and CHANGELOG
-4. Publish to npm
-5. Create a GitHub Release
-
-**No manual version bumping is required.**
-
-For detailed documentation on the release configuration, including plugin order and configuration details, see [RELEASE.md](./RELEASE.md).
+This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and publishing. No manual version bumping required. See [RELEASE.md](./RELEASE.md) for details.
 
 ## Commit Message Format
 
@@ -112,29 +102,23 @@ BREAKING CHANGE: The --resources flag now uses comma-separated values
 instead of multiple flag instances."
 ```
 
+## Branching Strategy
+
+- **`main`**: Production-ready branch. Only accepts PRs from `develop` or `hotfix/*`.
+- **`develop`**: Integration branch for features and non-critical fixes.
+- **`hotfix/*`**: Critical production fixes merged directly into `main`.
+
+Changes from `develop` are merged to `main` after testing and approval by maintainers.
 ## Pull Request Process
 
-1. **Create a feature branch:**
-   ```bash
-   git checkout -b feat/my-new-feature
-   ```
-
-2. **Make your changes** following the coding standards
-
-3. **Write/update tests** for your changes
-
-4. **Ensure all tests pass:**
-   ```bash
-   npm test
-   ```
-
-5. **Commit using Conventional Commits format**
-
-6. **Push and create a Pull Request** to `main`
-
-7. **Wait for CI checks** to pass
-
-8. **Request review** from maintainers
+1. **Create a feature branch** from `develop` (or `hotfix/*` for critical fixes)
+2. **Make your changes** following coding standards
+3. **Write/update tests** and ensure `npm test` passes
+4. **Commit** using Conventional Commits format
+5. **Push** and create a PR:
+   - Features → `develop`
+   - Hotfixes → `main` (branch name must start with `hotfix/`)
+6. **Wait for CI checks** and request review from maintainers
 
 ## Coding Standards
 
