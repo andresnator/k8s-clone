@@ -9,6 +9,7 @@ import chalk from 'chalk';
 
 const config = new ConfigLoader();
 const PACKAGE_NAME = '@andresnator/k8s-clone';
+const VERSION_CHECK_TIMEOUT_MS = 3500;
 
 async function main() {
     const ui = new UI();
@@ -17,7 +18,7 @@ async function main() {
 
     // Check for updates with a timeout to avoid blocking too long
     const versionCheckPromise = checkForUpdate(PACKAGE_NAME);
-    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3500));
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), VERSION_CHECK_TIMEOUT_MS));
     
     // Wait for version check to complete (with timeout) before starting UI interaction
     const result = await Promise.race([versionCheckPromise, timeoutPromise]);

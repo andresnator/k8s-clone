@@ -277,10 +277,12 @@ describe('version-checker', () => {
             expect(message).toContain('¡UPDATE AVAILABLE!');
             expect(message).toContain('…'); // Should contain ellipsis for truncation
             // Each line should not exceed the banner structure
+            const BANNER_WIDTH = 70;
+            const MAX_LINE_LENGTH = BANNER_WIDTH + 6; // '│  ' prefix (3 chars) + content + '│' suffix (1 char) + padding (2 chars)
             const lines = message.split('\n');
             lines.forEach(line => {
                 if (line.includes('│') && !line.includes('┌') && !line.includes('└')) {
-                    expect(line.length).toBeLessThanOrEqual(76); // Banner width + box chars
+                    expect(line.length).toBeLessThanOrEqual(MAX_LINE_LENGTH);
                 }
             });
         });
