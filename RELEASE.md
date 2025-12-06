@@ -134,11 +134,19 @@ The GitHub Actions workflow requires these secrets:
 
 ## Triggering a Release
 
-Releases happen automatically when commits are pushed to `main`. To trigger a release:
+## Triggering a Release
 
-1. Create commits following [Conventional Commits](https://www.conventionalcommits.org/) format
-2. Merge your pull request to `main`
-3. The CI workflow analyzes commits and creates a release if applicable
+Releases happen automatically when changes are merged into `main`. Due to branch protection rules, **you cannot push directly to main**.
+
+The standard flow is:
+1. Create a feature branch from `develop`.
+2. Merge your feature branch into `develop` via Pull Request.
+3. When ready for a release, create a Pull Request from `develop` to `main`.
+4. Once merged, the CI workflow analyzes the new commits on `main` and creates a release if applicable.
+
+**Hotfixes:**
+- For critical bugs, create a branch `hotfix/xxx` from `main`.
+- Fix the bug and PR directly back to `main`.
 
 **Note:** Commits that don't follow the conventional format (or use types like `docs:`, `chore:`, `ci:`) won't trigger a release.
 

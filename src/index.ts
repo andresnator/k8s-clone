@@ -10,6 +10,7 @@ const config = new ConfigLoader();
 
 async function main() {
     const ui = new UI();
+    await config.init();
     await ui.showBanner();
 
     const tempClient = new K8sClient();

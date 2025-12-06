@@ -18,6 +18,31 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 - `kubectl` installed and available in your PATH.
 - Access to a Kubernetes cluster (current context in `~/.kube/config`).
 
+## Configuration
+
+By default, `k8s-clone` looks for a configuration file at `~/.k8s-clone/config`. If this file does not exist, it will be automatically created with defaults detected from your current Kubernetes context.
+
+You can customize the configuration file location using the `K8S_CLONE_CONFIG` environment variable:
+
+```bash
+export K8S_CLONE_CONFIG="/path/to/my/custom/config.json"
+```
+
+The configuration file allows you to define default clusters, namespaces, and resources to speed up the selection process.
+
+### Setup Script
+
+To automatically configure your shell environment and create the default configuration, run:
+
+```bash
+npm run setup
+```
+
+This will:
+1. Detect your current shell (e.g., bash, zsh).
+2. Add the `K8S_CLONE_CONFIG` variable to your shell configuration.
+3. Generate the default `~/.k8s-clone/config` file.
+
 ## Installation
 
 ### Global Installation (Recommended)

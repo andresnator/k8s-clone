@@ -13,6 +13,10 @@ Please delete options that are not relevant.
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] Documentation update
 
+**Note:**
+- Target **`develop`** for new features and non-critical bug fixes.
+- Target **`main`** ONLY for hotfixes (branch name must start with `hotfix/`).
+
 ## How Has This Been Tested?
 Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
 
