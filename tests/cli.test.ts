@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@jest/globals';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -11,19 +11,19 @@ describe('CLI', () => {
 
     describe('--version flag', () => {
         it('should display version number with --version', () => {
-            const output = execSync(`node ${cliPath} --version`, { encoding: 'utf-8' }).trim();
+            const output = execFileSync('node', [cliPath, '--version'], { encoding: 'utf-8' }).trim();
             expect(output).toMatch(/^\d+\.\d+\.\d+$/);
         });
 
         it('should display version number with -v', () => {
-            const output = execSync(`node ${cliPath} -v`, { encoding: 'utf-8' }).trim();
+            const output = execFileSync('node', [cliPath, '-v'], { encoding: 'utf-8' }).trim();
             expect(output).toMatch(/^\d+\.\d+\.\d+$/);
         });
     });
 
     describe('--help flag', () => {
         it('should display help information with --help', () => {
-            const output = execSync(`node ${cliPath} --help`, { encoding: 'utf-8' });
+            const output = execFileSync('node', [cliPath, '--help'], { encoding: 'utf-8' });
             expect(output).toContain('Usage: k8s-clone');
             expect(output).toContain('A CLI tool to clone and migrate Kubernetes resources across namespaces');
             expect(output).toContain('-v, --version');
@@ -31,7 +31,7 @@ describe('CLI', () => {
         });
 
         it('should display help information with -h', () => {
-            const output = execSync(`node ${cliPath} -h`, { encoding: 'utf-8' });
+            const output = execFileSync('node', [cliPath, '-h'], { encoding: 'utf-8' });
             expect(output).toContain('Usage: k8s-clone');
             expect(output).toContain('A CLI tool to clone and migrate Kubernetes resources across namespaces');
             expect(output).toContain('-v, --version');
@@ -42,7 +42,7 @@ describe('CLI', () => {
     describe('unknown options', () => {
         it('should reject unknown options with an error', () => {
             try {
-                execSync(`node ${cliPath} --invalid`, { encoding: 'utf-8' });
+                execFileSync('node', [cliPath, '--invalid'], { encoding: 'utf-8' });
                 // If we get here, the test should fail
                 expect(true).toBe(false);
             } catch (error: any) {
