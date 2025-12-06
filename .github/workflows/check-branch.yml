@@ -1,0 +1,18 @@
+name: Branch Flow Enforcer
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-source-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate Source Branch
+        if: github.head_ref != 'develop' && !startsWith(github.head_ref, 'hotfix/') && !startsWith(github.head_ref, 'bugfix/')
+        run: |
+          echo "❌ Error: The main branch only accepts Pull Requests from 'develop', 'hotfix/*' or 'bugfix/*' branches."
+          echo "Your current branch is: ${{ github.head_ref }}"
+          echo "Please merge your changes into an allowed branch first."
+          exit 1
