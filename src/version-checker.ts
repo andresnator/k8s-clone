@@ -75,7 +75,8 @@ export async function checkForUpdate(packageName: string): Promise<VersionCheckR
     const currentVersion = getCurrentVersion();
     
     // Check if version check should be skipped
-    if (process.env.K8S_CLONE_SKIP_VERSION_CHECK === 'true') {
+    // Accept any truthy value (true, 1, yes, or any non-empty string)
+    if (process.env.K8S_CLONE_SKIP_VERSION_CHECK) {
         return {
             currentVersion,
             hasUpdate: false,
@@ -92,8 +93,10 @@ export async function checkForUpdate(packageName: string): Promise<VersionCheckR
             };
         }
 
-        // Compare versions using semver
-        const hasUpdate = semver.gt(latestVersion, currentVersion);
+        // Compare versions using semver, but only if both versions are valid
+        const hasUpdate = semver.valid(currentVersion) && semver.valid(latestVersion)
+            ? semver.gt(latestVersion, currentVersion)
+            : false;
 
         return {
             currentVersion,
@@ -124,14 +127,18 @@ export function formatUpdateMessage(result: VersionCheckResult, packageName: str
     const line1 = `There is a newer version (v${result.latestVersion}) of ${packageName}`;
     const line2 = `To update, run: npm install -g ${packageName}`;
 
+    // Truncate lines to BANNER_WIDTH before padding to avoid overflow
+    const safeLine1 = line1.length > BANNER_WIDTH ? line1.slice(0, BANNER_WIDTH - 1) + '…' : line1;
+    const safeLine2 = line2.length > BANNER_WIDTH ? line2.slice(0, BANNER_WIDTH - 1) + '…' : line2;
+
     return `
 ┌────────────────────────────────────────────────────────────────────────┐
 │                                                                        │
 │  ¡UPDATE AVAILABLE!                                                    │
 │                                                                        │
-│  ${line1.padEnd(BANNER_WIDTH, ' ')}│
+│  ${safeLine1.padEnd(BANNER_WIDTH, ' ')}│
 │                                                                        │
-│  ${line2.padEnd(BANNER_WIDTH, ' ')}│
+│  ${safeLine2.padEnd(BANNER_WIDTH, ' ')}│
 │                                                                        │
 └────────────────────────────────────────────────────────────────────────┘
 `;

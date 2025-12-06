@@ -163,7 +163,7 @@ describe('version-checker', () => {
             expect(result.hasUpdate).toBe(false);
         });
 
-        it('should skip version check when K8S_CLONE_SKIP_VERSION_CHECK is set', async () => {
+        it('should skip version check when K8S_CLONE_SKIP_VERSION_CHECK is set to true', async () => {
             process.env.K8S_CLONE_SKIP_VERSION_CHECK = 'true';
             mockReadFileSync.mockReturnValue(JSON.stringify({ version: '1.0.0' }));
 
@@ -172,6 +172,58 @@ describe('version-checker', () => {
             expect(result.currentVersion).toBe('1.0.0');
             expect(result.hasUpdate).toBe(false);
             expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should skip version check when K8S_CLONE_SKIP_VERSION_CHECK is set to 1', async () => {
+            process.env.K8S_CLONE_SKIP_VERSION_CHECK = '1';
+            mockReadFileSync.mockReturnValue(JSON.stringify({ version: '1.0.0' }));
+
+            const result = await checkForUpdate('@test/package');
+
+            expect(result.currentVersion).toBe('1.0.0');
+            expect(result.hasUpdate).toBe(false);
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should skip version check when K8S_CLONE_SKIP_VERSION_CHECK is set to yes', async () => {
+            process.env.K8S_CLONE_SKIP_VERSION_CHECK = 'yes';
+            mockReadFileSync.mockReturnValue(JSON.stringify({ version: '1.0.0' }));
+
+            const result = await checkForUpdate('@test/package');
+
+            expect(result.currentVersion).toBe('1.0.0');
+            expect(result.hasUpdate).toBe(false);
+            expect(mockFetch).not.toHaveBeenCalled();
+        });
+
+        it('should return no update when current version is invalid', async () => {
+            mockReadFileSync.mockReturnValue(JSON.stringify({ version: 'invalid' }));
+            const mockResponse = {
+                ok: true,
+                json: jest.fn().mockResolvedValue({ version: '1.0.0' }),
+            } as unknown as Response;
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await checkForUpdate('@test/package');
+
+            expect(result.currentVersion).toBe('invalid');
+            expect(result.latestVersion).toBe('1.0.0');
+            expect(result.hasUpdate).toBe(false);
+        });
+
+        it('should return no update when latest version is invalid', async () => {
+            mockReadFileSync.mockReturnValue(JSON.stringify({ version: '1.0.0' }));
+            const mockResponse = {
+                ok: true,
+                json: jest.fn().mockResolvedValue({ version: 'invalid' }),
+            } as unknown as Response;
+            mockFetch.mockResolvedValue(mockResponse);
+
+            const result = await checkForUpdate('@test/package');
+
+            expect(result.currentVersion).toBe('1.0.0');
+            expect(result.latestVersion).toBe('invalid');
+            expect(result.hasUpdate).toBe(false);
         });
     });
 
@@ -210,6 +262,27 @@ describe('version-checker', () => {
             const message = formatUpdateMessage(result, '@andresnator/k8s-clone');
 
             expect(message).toBe('');
+        });
+
+        it('should truncate long package names to avoid overflow', () => {
+            const result = {
+                currentVersion: '1.0.0',
+                latestVersion: '1.1.5',
+                hasUpdate: true,
+            };
+
+            const longPackageName = '@very-long-organization-name/very-long-package-name-that-exceeds-banner-width';
+            const message = formatUpdateMessage(result, longPackageName);
+
+            expect(message).toContain('¡UPDATE AVAILABLE!');
+            expect(message).toContain('…'); // Should contain ellipsis for truncation
+            // Each line should not exceed the banner structure
+            const lines = message.split('\n');
+            lines.forEach(line => {
+                if (line.includes('│') && !line.includes('┌') && !line.includes('└')) {
+                    expect(line.length).toBeLessThanOrEqual(76); // Banner width + box chars
+                }
+            });
         });
     });
 });

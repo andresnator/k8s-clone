@@ -57,7 +57,7 @@ k8s-clone uses an optional configuration file at `~/.k8s-clone/config` to store 
 ### Environment Variables
 
 - `K8S_CLONE_CONFIG`: Set a custom path for the configuration file (default: `~/.k8s-clone/config`)
-- `K8S_CLONE_SKIP_VERSION_CHECK`: Set to `true` to skip version update checks (useful for CI/CD environments)
+- `K8S_CLONE_SKIP_VERSION_CHECK`: Set to any truthy value (`true`, `1`, `yes`, or any non-empty string) to skip version update checks (useful for CI/CD environments)
 
 ## Usage
 

@@ -15,15 +15,16 @@ async function main() {
     const currentVersion = getCurrentVersion();
     await ui.showBanner(currentVersion);
 
-    // Check for updates asynchronously (don't block the main flow)
-    checkForUpdate(PACKAGE_NAME).then((result) => {
-        if (result.hasUpdate) {
-            const message = formatUpdateMessage(result, PACKAGE_NAME);
-            console.log(chalk.yellow(message));
-        }
-    }).catch(() => {
-        // Silently fail - don't interrupt the user experience
-    });
+    // Check for updates with a timeout to avoid blocking too long
+    const versionCheckPromise = checkForUpdate(PACKAGE_NAME);
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3500));
+    
+    // Wait for version check to complete (with timeout) before starting UI interaction
+    const result = await Promise.race([versionCheckPromise, timeoutPromise]);
+    if (result && result.hasUpdate) {
+        const message = formatUpdateMessage(result, PACKAGE_NAME);
+        console.log(chalk.yellow(message));
+    }
 
     const tempClient = new K8sClient();
     const contexts = tempClient.getContexts();
