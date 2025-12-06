@@ -28,9 +28,7 @@ npm install -g @andresnator/k8s-clone
 
 ## Configuration
 
-The tool stores configuration at `~/.k8s-clone/config`. Run `npm run setup` after installation to configure your shell environment.
-
-Configuration is optional—if not provided, the tool auto-detects clusters from `~/.kube/config`. See `config.example.json` for structure.
+The tool stores configuration at `~/.k8s-clone/config`. Configuration is optional—if not provided, the tool auto-detects clusters from `~/.kube/config`. See `config.example.json` for structure.
 
 ## Usage
 

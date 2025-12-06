@@ -35,8 +35,8 @@ Expected: 2 Deployments, 2 Services, 1 ConfigMap, 2 Secrets, 1 PVC, 1 Ingress, 1
 
 Verify PVC data:
 ```bash
-POD=$(kubectl get pod -n source -l tier=backend -o jsonpath='{.items[0].metadata.name}')
-kubectl exec -n source $POD -- ls /app/data
+POD_NAME=$(kubectl get pod -n source -l tier=backend -o jsonpath='{.items[0].metadata.name}')
+kubectl exec -n source $POD_NAME -- ls /app/data
 ```
 
 ## Step 2: Create Destination Namespace
