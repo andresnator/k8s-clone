@@ -1,3 +1,7 @@
+
+<img width="1191" height="295" alt="image" src="https://github.com/user-attachments/assets/c57244ee-c09a-44ea-95bd-5e81d3bc6da5" />
+
+
 # K8s Migrator
 
 [![CI](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml)
