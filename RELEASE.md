@@ -15,17 +15,17 @@ Plugins execute sequentially:
 
 2. **release-notes-generator**: Creates release notes grouped by type
 
-3. **changelog**: Updates CHANGELOG.md with release notes
+3. **changelog**: Generates CHANGELOG.md with release notes
 
 4. **npm**: Publishes to npm registry (requires `NPM_TOKEN`)
 
-5. **git**: Commits version files and CHANGELOG.md with `[skip ci]`
-
-6. **github**: Creates GitHub Release with notes and tags
+5. **github**: Creates GitHub Release with notes, tags, and attaches CHANGELOG.md
 
 ## Workflow
 
-Commit to `main` → Analyze commits → Generate notes → Update CHANGELOG → Publish to npm → Commit files → Create GitHub Release
+Commit to `main` → Analyze commits → Generate notes → Generate CHANGELOG → Publish to npm → Create GitHub Release
+
+**Note**: The CHANGELOG.md file is generated during the release process and attached to GitHub releases, but is not committed back to the repository. This approach complies with branch protection rules that prevent direct pushes to main.
 
 ## Required Secrets
 
