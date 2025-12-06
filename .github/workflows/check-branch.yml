@@ -20,3 +20,4 @@ jobs:
             echo "Your current branch is: $BRANCH"
             echo "Please merge your changes into an allowed branch first."
             exit 1
+          fi
