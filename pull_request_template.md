@@ -1,37 +1,32 @@
 # Pull Request Template
 
 ## Description
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+Provide a clear summary of the changes and reference the related issue.
 
 Fixes # (issue)
 
-## Type of change
-Please delete options that are not relevant.
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
 - [ ] Documentation update
 
-## How Has This Been Tested?
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration.
+## Testing
+Describe how you tested these changes:
 
-- [ ] Test A: (e.g., Run `npm start` and migrate resources locally)
-- [ ] Test B: (e.g., Verify PVC data integrity after migration)
-- [ ] Test C: (e.g., Unit tests `npm test`)
+- [ ] Unit tests pass (`npm test`)
+- [ ] Manual testing completed
+- [ ] Integration testing completed (if applicable)
 
-**Test Configuration**:
-* Node.js Version:
-* Kubernetes Cluster (Minikube/Kind/Cloud):
-* OS:
+**Test Environment**:
+- Node.js Version:
+- Kubernetes Setup:
+- OS:
 
-## Checklist:
-
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation
-- [ ] My changes generate no new warnings
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] New and existing unit tests pass locally with my changes
-- [ ] Any dependent changes have been merged and published in downstream modules
+## Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-reviewed the code
+- [ ] Updated documentation (if needed)
+- [ ] Added/updated tests
+- [ ] All tests pass locally
+- [ ] Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
