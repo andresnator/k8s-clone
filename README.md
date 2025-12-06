@@ -11,6 +11,7 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 - Granular selection of resources (Services, Deployments, ConfigMaps, Secrets, PVCs).
 - PVC data migration (copies volume contents).
 - Friendly interactive interface.
+- Automatic update notifications - displays when a newer version is available on npm.
 
 ## Requirements
 
@@ -52,6 +53,11 @@ k8s-clone uses an optional configuration file at `~/.k8s-clone/config` to store 
 **Custom Location**: Set `K8S_CLONE_CONFIG` environment variable to use a different path.
 
 **Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.json` for structure details.
+
+### Environment Variables
+
+- `K8S_CLONE_CONFIG`: Set a custom path for the configuration file (default: `~/.k8s-clone/config`)
+- `K8S_CLONE_SKIP_VERSION_CHECK`: Set to `true` to skip version update checks (useful for CI/CD environments)
 
 ## Usage
 

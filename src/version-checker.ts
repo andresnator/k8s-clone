@@ -109,6 +109,8 @@ export async function checkForUpdate(packageName: string): Promise<VersionCheckR
     }
 }
 
+const BANNER_WIDTH = 70;
+
 /**
  * Format the update notification message
  * @param result The version check result
@@ -119,16 +121,18 @@ export function formatUpdateMessage(result: VersionCheckResult, packageName: str
         return '';
     }
 
+    const line1 = `There is a newer version (v${result.latestVersion}) of ${packageName}`;
+    const line2 = `To update, run: npm install -g ${packageName}`;
+
     return `
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│        ¡UPDATE AVAILABLE!                                        │
-│                                                                  │
-│        There is a newer version (v${result.latestVersion}) of ${packageName}       │
-│                                                                  │
-│        To update, run:                                           │
-│        $ npm install -g ${packageName}                           │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                                                                        │
+│  ¡UPDATE AVAILABLE!                                                    │
+│                                                                        │
+│  ${line1.padEnd(BANNER_WIDTH, ' ')}│
+│                                                                        │
+│  ${line2.padEnd(BANNER_WIDTH, ' ')}│
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
 `;
 }
