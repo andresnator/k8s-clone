@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Claude AI Code Context
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working with this repository.
 
 ## Project Overview
 

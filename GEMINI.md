@@ -1,64 +1,33 @@
-# K8s Migrator (@andresnator/k8s-clone)
+# K8s Migrator - Gemini AI Context
 
-## Project Overview
+CLI tool for cloning and migrating Kubernetes resources across namespaces with support for PVC data migration.
 
-**K8s Migrator** is a CLI tool designed to clone and migrate Kubernetes resources between namespaces. It allows for granular selection of resources and includes a robust mechanism for migrating PersistentVolumeClaim (PVC) data.
+## Key Modules
 
-### Key Features
-*   **Resource Migration:** Supports Services, Deployments, ConfigMaps, Secrets, and PVCs.
-*   **Data Migration:** Automates the transfer of PVC data by spinning up temporary ephemeral pods in both source and destination namespaces and piping data via `tar` over `kubectl exec`.
-*   **Interactive CLI:** Uses `inquirer` to guide the user through namespace selection and resource filtering.
-*   **Metadata Cleaning:** Automatically strips system-generated metadata (UIDs, resourceVersions, etc.) to ensure clean creation in the new namespace.
+- `index.ts`: Entry point and workflow orchestration
+- `migrator.ts`: Core migration logic and PVC data transfer
+- `k8s.ts`: K8sClient wrapper for Kubernetes API
+- `ui.ts`: Interactive CLI with inquirer
+- `resource-handlers.ts`: Resource-specific migration logic
+- `metadata-cleaner.ts`: Strips system-generated metadata
 
-### Architecture
-*   **`src/index.ts`**: The entry point. Orchestrates the user flow, gathers inputs, and triggers the migration process.
-*   **`src/migrator.ts`**: Contains the core business logic.
-    *   `migrateResources()`: Iterates through selected resources, cleans their metadata, and creates them in the destination namespace.
-    *   `migratePVCData()`: Handles the complex logic of creating `alpine` pods, waiting for them to be ready, and executing the shell command to transfer data.
-*   **`src/cleaner.ts`**: Handles the deletion of resources in the target namespace.
-*   **`src/k8s.ts`**: A wrapper class (`K8sClient`) around the official `@kubernetes/client-node` library, abstracting API calls for listing and retrieving resources.
-*   **`src/config.ts`**: Manages application configuration.
-*   **`src/metadata-cleaner.ts`**: Logic for stripping system-generated metadata.
-*   **`src/resource-handlers.ts`**: Contains specific handlers for different Kubernetes resources.
-*   **`src/types.ts`**: Defines TypeScript types and interfaces used across the project.
-*   **`src/ui.ts`**: Handles user interaction and console output.
+## Commands
 
-### Testing
-To run the unit tests:
 ```bash
-npm test
+npm install && npm run build  # Setup
+npm start                     # Run tool
+npm test                      # Run tests
 ```
 
-## Building and Running
+## Requirements
 
-### Prerequisites
-*   Node.js
-*   `kubectl` installed and configured in your PATH (required for PVC data transfer).
-*   A valid Kubernetes configuration (`~/.kube/config`) with access to the target cluster.
+- Node.js v20+
+- kubectl in PATH (for PVC data migration)
+- Valid ~/.kube/config
 
-### Setup
-1.  Install dependencies:
-    ```bash
-    npm install
-    ```
-2.  Build the TypeScript source:
-    ```bash
-    npm run build
-    ```
+## Development Notes
 
-### Execution
-To run the tool interactively:
-```bash
-npm start
-```
-
-## Development Conventions
-
-*   **Language:** TypeScript.
-*   **Code Structure:**
-    *   Source code resides in `src/`.
-    *   Compiled JavaScript is output to `dist/`.
-*   **Kubernetes Interaction:**
-    *   Use the `K8sClient` class in `src/k8s.ts` for all Kubernetes API interactions.
-    *   The project relies on `child_process.spawn` to execute raw `kubectl` commands for the data piping phase, as this is currently more efficient/reliable than streaming through the Node.js client for this specific use case.
-*   **Error Handling:** The `UI` class (implied) and standard `console` logging are used for feedback. The migration process attempts to catch errors per resource to prevent a single failure from stopping the entire batch, though critical setup failures will exit the process.
+- TypeScript source in `src/`, compiled to `dist/`
+- Use `K8sClient` class for Kubernetes API calls
+- PVC data transfer uses `kubectl exec` with tar piping
+- Migration order: ConfigMaps → Secrets → PVCs → Services → Deployments
