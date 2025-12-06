@@ -1,4 +1,4 @@
-import { jest, describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -36,6 +36,18 @@ describe('CLI', () => {
             expect(output).toContain('A CLI tool to clone and migrate Kubernetes resources across namespaces');
             expect(output).toContain('-v, --version');
             expect(output).toContain('-h, --help');
+        });
+    });
+
+    describe('unknown options', () => {
+        it('should reject unknown options with an error', () => {
+            try {
+                execSync(`node ${cliPath} --invalid`, { encoding: 'utf-8' });
+                // If we get here, the test should fail
+                expect(true).toBe(false);
+            } catch (error: any) {
+                expect(error.stderr.toString()).toContain('unknown option');
+            }
         });
     });
 });

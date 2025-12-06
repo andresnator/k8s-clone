@@ -212,11 +212,13 @@ program
     .name('k8s-clone')
     .description('A CLI tool to clone and migrate Kubernetes resources across namespaces')
     .version(currentVersion, '-v, --version', 'Display version number')
-    .helpOption('-h, --help', 'Display help for command');
+    .helpOption('-h, --help', 'Display help for command')
+    .allowUnknownOption(false); // Explicitly reject unknown options
 
 program.parse(process.argv);
 
-// If no options were provided, run the interactive main function
+// If no options were provided (only node and script path in argv), run the interactive main function
+// Commander will have already handled --version, --help, and unknown options by this point
 if (process.argv.length === 2) {
     main();
 }
