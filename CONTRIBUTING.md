@@ -112,10 +112,22 @@ BREAKING CHANGE: The --resources flag now uses comma-separated values
 instead of multiple flag instances."
 ```
 
+## Branching Strategy
+
+We follow a strict branching model to ensure stability in our production releases.
+
+- **`main`**: The production-ready branch. **Direct commits are not allowed.** This branch only accepts Pull Requests from `develop` or `hotfix/*` branches.
+- **`develop`**: The integration branch for new features and non-critical fixes. All feature branches should target this branch.
+- **`hotfix/*`**: Branches reserved for critical production fixes that need to be merged directly into `main`.
+
+> **Note:** Changes from `develop` are merged into `main` as part of the release process. This typically occurs after all features and fixes have been tested and approved, and at the discretion of the maintainers. If you are waiting for your changes to be released to production, please monitor the repository or ask a maintainer about the next scheduled release.
 ## Pull Request Process
 
 1. **Create a feature branch:**
+   Always create your branch from `develop` (unless it's a hotfix).
    ```bash
+   git checkout develop
+   git pull origin develop
    git checkout -b feat/my-new-feature
    ```
 
@@ -130,7 +142,11 @@ instead of multiple flag instances."
 
 5. **Commit using Conventional Commits format**
 
-6. **Push and create a Pull Request** to `main`
+6. **Push and create a Pull Request**
+   - For **features**: Target the `develop` branch.
+   - For **hotfixes**: Target the `main` branch (branch name must start with `hotfix/`).
+
+   > **Important:** The `main` branch has a protection rule that rejects PRs from branches other than `develop` or `hotfix/*`.
 
 7. **Wait for CI checks** to pass
 
