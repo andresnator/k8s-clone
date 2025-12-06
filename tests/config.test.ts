@@ -1,20 +1,37 @@
 import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import path from 'path';
+import os from 'os';
 
 // Set up mock before importing ConfigLoader
 const mockExistsSync = jest.fn();
 const mockReadFileSync = jest.fn();
+const mockWriteFileSync = jest.fn();
+const mockMkdirSync = jest.fn();
 
 jest.unstable_mockModule('fs', () => ({
     default: {
         existsSync: mockExistsSync,
         readFileSync: mockReadFileSync,
+        writeFileSync: mockWriteFileSync,
+        mkdirSync: mockMkdirSync,
     },
     existsSync: mockExistsSync,
     readFileSync: mockReadFileSync,
+    writeFileSync: mockWriteFileSync,
+    mkdirSync: mockMkdirSync,
 }));
 
 // Import after mocking
-const { ConfigLoader } = await import('../src/config.js');
+const { 
+    ConfigLoader, 
+    resolveConfigPath, 
+    ensureConfigDir, 
+    initializeConfigFile,
+    DEFAULT_CONFIG,
+    CONFIG_ENV_VAR,
+    DEFAULT_CONFIG_DIR,
+    DEFAULT_CONFIG_PATH 
+} = await import('../src/config.js');
 
 describe('ConfigLoader', () => {
     const mockConfig = {
@@ -204,5 +221,143 @@ describe('ConfigLoader', () => {
 
             expect(services).toBeNull();
         });
+    });
+
+    describe('getConfigPath', () => {
+        it('should return the resolved config path', () => {
+            mockExistsSync.mockReturnValue(false);
+
+            const loader = new ConfigLoader('my-config.json');
+            const configPath = loader.getConfigPath();
+
+            expect(configPath).toContain('my-config.json');
+        });
+    });
+});
+
+describe('resolveConfigPath', () => {
+    const originalEnv = process.env;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        process.env = { ...originalEnv };
+        delete process.env[CONFIG_ENV_VAR];
+    });
+
+    afterEach(() => {
+        process.env = originalEnv;
+    });
+
+    it('should use provided configPath when given', () => {
+        const result = resolveConfigPath('custom-config.json');
+        expect(result).toContain('custom-config.json');
+    });
+
+    it('should use environment variable when no configPath is provided', () => {
+        process.env[CONFIG_ENV_VAR] = '/custom/path/to/config';
+        const result = resolveConfigPath();
+        expect(result).toBe('/custom/path/to/config');
+    });
+
+    it('should fall back to default path when neither configPath nor env var is set', () => {
+        const result = resolveConfigPath();
+        expect(result).toBe(DEFAULT_CONFIG_PATH);
+    });
+
+    it('should prioritize configPath over environment variable', () => {
+        process.env[CONFIG_ENV_VAR] = '/env/path/config';
+        const result = resolveConfigPath('explicit-config.json');
+        expect(result).toContain('explicit-config.json');
+        expect(result).not.toContain('/env/path');
+    });
+});
+
+describe('ensureConfigDir', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should create directory if it does not exist', () => {
+        mockExistsSync.mockReturnValue(false);
+        
+        ensureConfigDir('/home/user/.k8s-clone/config');
+        
+        expect(mockMkdirSync).toHaveBeenCalledWith('/home/user/.k8s-clone', { recursive: true });
+    });
+
+    it('should not create directory if it already exists', () => {
+        mockExistsSync.mockReturnValue(true);
+        
+        ensureConfigDir('/home/user/.k8s-clone/config');
+        
+        expect(mockMkdirSync).not.toHaveBeenCalled();
+    });
+});
+
+describe('initializeConfigFile', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should create config file with default structure if it does not exist', () => {
+        mockExistsSync.mockImplementation((p: unknown) => {
+            // File doesn't exist, but directory might
+            if (String(p).endsWith('config')) return false;
+            return true;
+        });
+
+        const result = initializeConfigFile('/home/user/.k8s-clone/config');
+
+        expect(result).toBe(true);
+        expect(mockWriteFileSync).toHaveBeenCalledWith(
+            '/home/user/.k8s-clone/config',
+            JSON.stringify(DEFAULT_CONFIG, null, 4),
+            'utf-8'
+        );
+    });
+
+    it('should not create config file if it already exists', () => {
+        mockExistsSync.mockReturnValue(true);
+
+        const result = initializeConfigFile('/home/user/.k8s-clone/config');
+
+        expect(result).toBe(false);
+        expect(mockWriteFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should create directory if it does not exist', () => {
+        mockExistsSync.mockReturnValue(false);
+
+        initializeConfigFile('/home/user/.k8s-clone/config');
+
+        expect(mockMkdirSync).toHaveBeenCalledWith('/home/user/.k8s-clone', { recursive: true });
+    });
+});
+
+describe('DEFAULT_CONFIG', () => {
+    it('should have the correct structure', () => {
+        expect(DEFAULT_CONFIG).toEqual({
+            clusters: [],
+            namespaces: {},
+            services: {},
+            deployments: {},
+            configMaps: {},
+            secrets: {},
+            persistentVolumeClaims: {}
+        });
+    });
+});
+
+describe('Constants', () => {
+    it('should define CONFIG_ENV_VAR correctly', () => {
+        expect(CONFIG_ENV_VAR).toBe('K8S_CLONE_CONFIG');
+    });
+
+    it('should define DEFAULT_CONFIG_DIR correctly', () => {
+        expect(DEFAULT_CONFIG_DIR).toBe(path.join(os.homedir(), '.k8s-clone'));
+    });
+
+    it('should define DEFAULT_CONFIG_PATH correctly', () => {
+        expect(DEFAULT_CONFIG_PATH).toBe(path.join(os.homedir(), '.k8s-clone', 'config'));
     });
 });

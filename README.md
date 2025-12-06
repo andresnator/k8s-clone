@@ -43,6 +43,123 @@ npm install
 npm run build
 ```
 
+## Configuration
+
+k8s-clone uses a configuration file to store default cluster and namespace settings. This allows you to pre-configure your frequently used clusters and resources.
+
+### Configuration File Location
+
+The configuration file is located at `~/.k8s-clone/config` by default. During installation, a setup script automatically:
+
+1. Creates the `~/.k8s-clone/` directory
+2. Creates an empty configuration file with the required structure
+3. Adds the `K8S_CLONE_CONFIG` environment variable to your shell configuration (`.zshrc`, `.bash_profile`, or detected default)
+
+### Environment Variable
+
+You can customize the configuration file location by setting the `K8S_CLONE_CONFIG` environment variable:
+
+```bash
+# Default (set automatically during installation)
+export K8S_CLONE_CONFIG="$HOME/.k8s-clone/config"
+
+# Or use a custom location
+export K8S_CLONE_CONFIG="/path/to/your/config"
+```
+
+### Configuration File Structure
+
+The configuration file uses JSON format with the following structure:
+
+```json
+{
+    "clusters": [],
+    "namespaces": {},
+    "services": {},
+    "deployments": {},
+    "configMaps": {},
+    "secrets": {},
+    "persistentVolumeClaims": {}
+}
+```
+
+### Example Configuration
+
+Here's a complete example with clusters and resources configured:
+
+```json
+{
+    "clusters": [
+        { "name": "production" },
+        { "name": "staging" }
+    ],
+    "namespaces": {
+        "production": [
+            { "name": "app-ns" },
+            { "name": "monitoring" }
+        ],
+        "staging": [
+            { "name": "test-ns" }
+        ]
+    },
+    "services": {
+        "app-ns": [
+            { "name": "backend-service" },
+            { "name": "frontend-service" }
+        ]
+    },
+    "deployments": {
+        "app-ns": [
+            { "name": "backend-deployment" },
+            { "name": "frontend-deployment" }
+        ]
+    },
+    "configMaps": {
+        "app-ns": [
+            { "name": "app-config" }
+        ]
+    },
+    "secrets": {
+        "app-ns": [
+            { "name": "db-credentials" }
+        ]
+    },
+    "persistentVolumeClaims": {
+        "app-ns": [
+            { "name": "data-pvc" }
+        ]
+    }
+}
+```
+
+### Configuration Behavior
+
+- **When configuration is empty**: The tool automatically detects clusters from `~/.kube/config` and fetches resources from the Kubernetes API
+- **When configuration has data**: The tool uses the pre-configured values instead of making API calls
+- **Mixed usage**: You can configure some sections while leaving others empty for automatic detection
+
+### Manual Setup
+
+If you need to run the setup script manually (e.g., after updating your shell or moving to a new machine):
+
+```bash
+npm run setup
+```
+
+Or run the script directly:
+
+```bash
+bash scripts/setup.sh
+```
+
+### Example Configuration File
+
+An example configuration file is included in the repository at `config.example.json`. You can use this as a reference or copy it to your config location:
+
+```bash
+cp config.example.json ~/.k8s-clone/config
+```
+
 ## Usage
 
 If installed globally:
@@ -123,6 +240,7 @@ To test migration between two clusters, you can use Minikube profiles:
 - `src/resource-handlers.ts` - Resource-specific handling logic
 - `src/types.ts` - TypeScript type definitions
 - `src/Banner.tsx` - Banner component
+- `scripts/setup.sh` - Configuration setup script
 - `demo/demo.yaml` - Complete demo application manifest
 
 ## Testing
