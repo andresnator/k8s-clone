@@ -302,7 +302,7 @@ describe('initializeConfigFile', () => {
     it('should create config file with default structure if it does not exist', () => {
         mockExistsSync.mockImplementation((p: unknown) => {
             // File doesn't exist, but directory might
-            if (String(p).endsWith('config')) return false;
+            if (path.basename(String(p)) === 'config') return false;
             return true;
         });
 
