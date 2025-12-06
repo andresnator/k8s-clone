@@ -16,76 +16,34 @@ Releases are triggered only from the `main` branch. This ensures that only revie
 
 ## Plugin Execution Order
 
-The plugins in `.releaserc.json` execute in a specific order, where each plugin depends on the previous steps. The order is crucial for a proper release workflow:
+Plugins in `.releaserc.json` execute sequentially:
 
 ### 1. `@semantic-release/commit-analyzer`
 
-**Purpose:** Analyzes commit messages to determine the type of release.
-
-- Parses commits since the last release using [Conventional Commits](https://www.conventionalcommits.org/) format
-- Determines if a release is needed and what type (major, minor, patch)
-- Uses the Angular preset by default:
-  - `fix:` commits trigger a **patch** release (1.0.0 → 1.0.1)
-  - `feat:` commits trigger a **minor** release (1.0.0 → 1.1.0)
-  - `feat!:` or `BREAKING CHANGE:` triggers a **major** release (1.0.0 → 2.0.0)
+Analyzes commits to determine release type:
+- `fix:` → patch (1.0.0 → 1.0.1)
+- `feat:` → minor (1.0.0 → 1.1.0)
+- `feat!:` or `BREAKING CHANGE:` → major (1.0.0 → 2.0.0)
 
 ### 2. `@semantic-release/release-notes-generator`
 
-**Purpose:** Generates release notes from the analyzed commits.
-
-- Creates human-readable release notes from commit messages
-- Groups commits by type (Features, Bug Fixes, etc.)
-- Includes links to commits and pull requests
-- These notes appear in GitHub Releases and the CHANGELOG
+Generates release notes from commits, grouped by type.
 
 ### 3. `@semantic-release/changelog`
 
-**Purpose:** Updates the CHANGELOG.md file.
-
-- Prepends release notes to `CHANGELOG.md`
-- Maintains a historical record of all releases
-- The file is committed as part of the release (see step 5)
+Updates `CHANGELOG.md` with release notes.
 
 ### 4. `@semantic-release/npm`
 
-**Purpose:** Publishes the package to npm.
-
-- Updates `version` in `package.json` and `package-lock.json`
-- Publishes the package to the npm registry
-- Requires `NPM_TOKEN` secret to be configured
-- Uses npm provenance for package integrity (configured in workflow)
+Publishes package to npm (requires `NPM_TOKEN`).
 
 ### 5. `@semantic-release/git`
 
-**Purpose:** Commits release artifacts back to the repository.
-
-```json
-{
-    "assets": [
-        "package.json",
-        "package-lock.json",
-        "CHANGELOG.md"
-    ],
-    "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
-}
-```
-
-- **assets:** Files to commit after the release
-  - `package.json` and `package-lock.json` contain the updated version
-  - `CHANGELOG.md` contains the new release notes
-- **message:** The commit message format
-  - Uses `chore(release):` prefix for consistency
-  - Includes `[skip ci]` to prevent infinite release loops
-  - Includes release notes in the commit body
+Commits version updates (`package.json`, `package-lock.json`, `CHANGELOG.md`) with `[skip ci]`.
 
 ### 6. `@semantic-release/github`
 
-**Purpose:** Creates GitHub Releases and manages GitHub integration.
-
-- Creates a GitHub Release with the version tag
-- Attaches release notes to the GitHub Release
-- Comments on resolved issues and pull requests
-- Adds labels to released issues/PRs
+Creates GitHub Release and comments on resolved issues/PRs.
 
 ## Release Workflow Diagram
 
@@ -150,23 +108,8 @@ Releases happen automatically when commits are pushed to `main`. To trigger a re
 
 ## Troubleshooting
 
-### No Release Created
+**No release created**: Ensure commits follow Conventional Commits format with release-triggering types.
 
-If no release is created after merging:
-- Ensure commits follow Conventional Commits format
-- Check that at least one commit has a release-triggering type (`fix:`, `feat:`, etc.)
-- Verify the workflow ran successfully in GitHub Actions
+**npm publish failed**: Verify `NPM_TOKEN` secret and permissions.
 
-### npm Publish Failed
-
-If npm publishing fails:
-- Verify `NPM_TOKEN` secret is set correctly
-- Ensure the token has publish permissions
-- Check if the package name is available/owned
-
-### Version Conflicts
-
-If there are version conflicts:
-- Don't manually edit `version` in `package.json`
-- Let semantic-release manage versioning automatically
-- Resolve conflicts by accepting the current main branch version
+**Version conflicts**: Let semantic-release manage versioning—don't manually edit `package.json`.
