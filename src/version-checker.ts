@@ -119,16 +119,18 @@ export function formatUpdateMessage(result: VersionCheckResult, packageName: str
         return '';
     }
 
+    const line1 = `There is a newer version (v${result.latestVersion}) of ${packageName}`;
+    const line2 = `To update, run: npm install -g ${packageName}`;
+
     return `
-┌──────────────────────────────────────────────────────────────────┐
-│                                                                  │
-│        ¡UPDATE AVAILABLE!                                        │
-│                                                                  │
-│        There is a newer version (v${result.latestVersion}) of ${packageName}       │
-│                                                                  │
-│        To update, run:                                           │
-│        $ npm install -g ${packageName}                           │
-│                                                                  │
-└──────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────┐
+│                                                                        │
+│  ¡UPDATE AVAILABLE!                                                    │
+│                                                                        │
+│  ${line1.padEnd(70, ' ')}│
+│                                                                        │
+│  ${line2.padEnd(70, ' ')}│
+│                                                                        │
+└────────────────────────────────────────────────────────────────────────┘
 `;
 }
