@@ -35,7 +35,7 @@ Expected: 2 Deployments, 2 Services, 1 ConfigMap, 2 Secrets, 1 PVC, 1 Ingress, 1
 
 Verify PVC data:
 ```bash
-POD_NAME=$(kubectl get pod -n source -l tier=backend -o jsonpath='{.items[0].metadata.name}')
+POD_NAME=$(kubectl get pods -n source -l tier=backend -o jsonpath='{.items[0].metadata.name}')
 kubectl exec -n source $POD_NAME -- ls /app/data
 ```
 
@@ -65,7 +65,7 @@ The tool migrates in order: ConfigMaps → Secrets → PVCs (with data) → Serv
 kubectl get all,configmap,secret,pvc -n dest
 
 # Verify PVC data
-DEST_POD=$(kubectl get pod -n dest -l tier=backend -o jsonpath='{.items[0].metadata.name}')
+DEST_POD=$(kubectl get pods -n dest -l tier=backend -o jsonpath='{.items[0].metadata.name}')
 kubectl wait --for=condition=ready pod/$DEST_POD -n dest --timeout=120s
 kubectl exec -n dest $DEST_POD -- ls /app/data
 ```
