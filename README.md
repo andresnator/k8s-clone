@@ -1,6 +1,6 @@
 # K8s Migrator
 
-![K8s Clone](https://github.com/user-attachments/assets/098bafdc-260d-432a-ae0a-0646c056e597)
+![K8s Migrator - Kubernetes Resource Migration Tool](https://github.com/user-attachments/assets/098bafdc-260d-432a-ae0a-0646c056e597)
 
 [![CI](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml)
@@ -28,7 +28,7 @@ npm install -g @andresnator/k8s-clone
 
 ## Configuration
 
-The tool stores configuration at `~/.k8s-clone/config`. Configuration is optional—if not provided, the tool auto-detects clusters from `~/.kube/config`. See `config.example.json` for structure.
+The tool stores configuration at `~/.k8s-clone/config`. Configuration is optional—if not provided, the tool auto-detects clusters from `~/.kube/config`. See `config.example.json` in the project root for structure.
 
 ## Usage
 
