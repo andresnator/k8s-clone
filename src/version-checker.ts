@@ -109,6 +109,8 @@ export async function checkForUpdate(packageName: string): Promise<VersionCheckR
     }
 }
 
+const BANNER_WIDTH = 70;
+
 /**
  * Format the update notification message
  * @param result The version check result
@@ -127,9 +129,9 @@ export function formatUpdateMessage(result: VersionCheckResult, packageName: str
 │                                                                        │
 │  ¡UPDATE AVAILABLE!                                                    │
 │                                                                        │
-│  ${line1.padEnd(70, ' ')}│
+│  ${line1.padEnd(BANNER_WIDTH, ' ')}│
 │                                                                        │
-│  ${line2.padEnd(70, ' ')}│
+│  ${line2.padEnd(BANNER_WIDTH, ' ')}│
 │                                                                        │
 └────────────────────────────────────────────────────────────────────────┘
 `;

@@ -1,15 +1,12 @@
-import { jest, describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { jest, describe, it, expect, beforeEach } from '@jest/globals';
 
 // Mock fs module
-const mockExistsSync = jest.fn();
 const mockReadFileSync = jest.fn();
 
 jest.unstable_mockModule('fs', () => ({
     default: {
-        existsSync: mockExistsSync,
         readFileSync: mockReadFileSync,
     },
-    existsSync: mockExistsSync,
     readFileSync: mockReadFileSync,
 }));
 
