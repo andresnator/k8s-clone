@@ -103,7 +103,7 @@ export function initializeConfigFile(configPath: string): boolean {
 }
 
 /**
- * Loads cluster, namespace, and resource configurations from a JSON file.
+ * Loads cluster, namespace, and resource configurations from a YAML or JSON file.
  * Returns null from methods when config is missing/invalid to trigger API fallback.
  */
 export class ConfigLoader {
