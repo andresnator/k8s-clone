@@ -16,6 +16,7 @@ A CLI tool to clone and migrate Kubernetes resources across namespaces.
 - PVC data migration (copies volume contents).
 - Friendly interactive interface.
 - Automatic update notifications - displays when a newer version is available on npm.
+- **Custom Apps** - Group and deploy related Kubernetes resources as configurable applications (see [CUSTOM_APPS.md](./CUSTOM_APPS.md)).
 
 ## Requirements
 
@@ -83,6 +84,18 @@ Follow the on‑screen prompts to choose the source namespace, the destination n
 
 - `--version, -v`: Display the current version number
 - `--help, -h`: Display help information
+
+## Custom Apps
+
+The **Custom Apps** feature allows you to group related Kubernetes resources into logical applications and deploy them as a unit with optional spec overrides.
+
+**Key Features:**
+- Define applications once in config, deploy multiple times
+- Override resource specs per environment (e.g., replica counts, storage sizes)
+- Support for deep nesting in overwrite-spec
+- Duplicate resource detection and warnings
+
+For complete documentation, examples, and troubleshooting, see **[CUSTOM_APPS.md](./CUSTOM_APPS.md)**.
 
 ## Demo
 
