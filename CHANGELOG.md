@@ -1,3 +1,14 @@
+# [1.1.0](https://github.com/andresnator/k8s-clone/compare/v1.0.1...v1.1.0) (2025-12-08)
+
+
+### Features
+
+* add --version and --help CLI flags ([#38](https://github.com/andresnator/k8s-clone/issues/38)) ([91560e0](https://github.com/andresnator/k8s-clone/commit/91560e0ffce7bcf1a1534c96bf75f9f7dad54ebf))
+* add version checking with update notifications ([#34](https://github.com/andresnator/k8s-clone/issues/34)) ([83dab9a](https://github.com/andresnator/k8s-clone/commit/83dab9a7f2fe2d557ab1dc2fea3e561d5270b299))
+* implement Custom Apps feature with overwrite-spec support ([#48](https://github.com/andresnator/k8s-clone/issues/48)) ([38d6130](https://github.com/andresnator/k8s-clone/commit/38d6130f30fa9f8df28b111df04e6b8d6c91241b))
+* Merge pull request [#49](https://github.com/andresnator/k8s-clone/issues/49) from andresnator/develop ([6e0f511](https://github.com/andresnator/k8s-clone/commit/6e0f51145b732cde92293257b85ca7786c1b1910))
+* Migrate config file to ~/.k8s-clone/config with env var support ([#28](https://github.com/andresnator/k8s-clone/issues/28)) ([a6e878a](https://github.com/andresnator/k8s-clone/commit/a6e878adec7ac2790389b526f3d85f2699934446))
+
 ## [1.0.1](https://github.com/andresnator/k8s-clone/compare/v1.0.0...v1.0.1) (2025-12-06)
 
 
