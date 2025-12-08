@@ -218,7 +218,8 @@ function extractAppResources(resources: AppResource[] | undefined, ui: UI): { na
     if (resources) {
         for (const res of resources) {
             if (seenNames.has(res.resource)) {
-                ui.logWarning(`Duplicate resource '${res.resource}' found in app. Only the last overwrite-spec will be used.`);
+                ui.logWarning(`Duplicate resource '${res.resource}' found in app. Skipping duplicate entry.`);
+                continue;
             }
             seenNames.add(res.resource);
             names.push(res.resource);
