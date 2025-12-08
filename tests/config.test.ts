@@ -419,7 +419,7 @@ describe('ensureConfigDir', () => {
     it('should create directory if it does not exist', () => {
         mockExistsSync.mockReturnValue(false);
         
-        ensureConfigDir('/home/user/.k8s-clone/config');
+        ensureConfigDir('/home/user/.k8s-clone/config.yaml');
         
         expect(mockMkdirSync).toHaveBeenCalledWith('/home/user/.k8s-clone', { recursive: true });
     });
@@ -427,7 +427,7 @@ describe('ensureConfigDir', () => {
     it('should not create directory if it already exists', () => {
         mockExistsSync.mockReturnValue(true);
         
-        ensureConfigDir('/home/user/.k8s-clone/config');
+        ensureConfigDir('/home/user/.k8s-clone/config.yaml');
         
         expect(mockMkdirSync).not.toHaveBeenCalled();
     });
@@ -441,16 +441,16 @@ describe('initializeConfigFile', () => {
     it('should create config file with default structure if it does not exist', () => {
         mockExistsSync.mockImplementation((p: unknown) => {
             // File doesn't exist, but directory might
-            if (path.basename(String(p)) === 'config') return false;
+            if (path.basename(String(p)) === 'config.yaml') return false;
             return true;
         });
 
-        const result = initializeConfigFile('/home/user/.k8s-clone/config');
+        const result = initializeConfigFile('/home/user/.k8s-clone/config.yaml');
 
         expect(result).toBe(true);
         expect(mockWriteFileSync).toHaveBeenCalled();
         const writeCall = mockWriteFileSync.mock.calls[0];
-        expect(writeCall[0]).toBe('/home/user/.k8s-clone/config');
+        expect(writeCall[0]).toBe('/home/user/.k8s-clone/config.yaml');
         expect(writeCall[2]).toBe('utf-8');
         // Check that it's YAML format (contains YAML-style content)
         expect(String(writeCall[1])).toContain('clusters: []');
@@ -459,7 +459,7 @@ describe('initializeConfigFile', () => {
     it('should not create config file if it already exists', () => {
         mockExistsSync.mockReturnValue(true);
 
-        const result = initializeConfigFile('/home/user/.k8s-clone/config');
+        const result = initializeConfigFile('/home/user/.k8s-clone/config.yaml');
 
         expect(result).toBe(false);
         expect(mockWriteFileSync).not.toHaveBeenCalled();
@@ -468,7 +468,7 @@ describe('initializeConfigFile', () => {
     it('should create directory if it does not exist', () => {
         mockExistsSync.mockReturnValue(false);
 
-        initializeConfigFile('/home/user/.k8s-clone/config');
+        initializeConfigFile('/home/user/.k8s-clone/config.yaml');
 
         expect(mockMkdirSync).toHaveBeenCalledWith('/home/user/.k8s-clone', { recursive: true });
     });
@@ -499,7 +499,7 @@ describe('Constants', () => {
     });
 
     it('should define DEFAULT_CONFIG_PATH correctly', () => {
-        expect(DEFAULT_CONFIG_PATH).toBe(path.join(os.homedir(), '.k8s-clone', 'config'));
+        expect(DEFAULT_CONFIG_PATH).toBe(path.join(os.homedir(), '.k8s-clone', 'config.yaml'));
     });
 });
 

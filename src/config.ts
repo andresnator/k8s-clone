@@ -53,15 +53,15 @@ export const CONFIG_ENV_VAR = 'K8S_CLONE_CONFIG';
 export const DEFAULT_CONFIG_DIR = path.join(os.homedir(), '.k8s-clone');
 
 /**
- * Default config file path (~/.k8s-clone/config).
+ * Default config file path (~/.k8s-clone/config.yaml).
  */
-export const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, 'config');
+export const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, 'config.yaml');
 
 /**
  * Resolves the config file path using the following priority:
  * 1. If configPath parameter is provided (not undefined), use it
  * 2. Check K8S_CLONE_CONFIG environment variable
- * 3. Fall back to ~/.k8s-clone/config
+ * 3. Fall back to ~/.k8s-clone/config.yaml
  */
 export function resolveConfigPath(configPath?: string): string {
     if (configPath !== undefined) {

@@ -12,7 +12,7 @@ This feature is particularly useful for:
 
 ## Configuration Structure
 
-Custom apps are defined in the `apps` array within your k8s-clone configuration file (default: `~/.k8s-clone/config`).
+Custom apps are defined in the `apps` array within your k8s-clone configuration file (default: `~/.k8s-clone/config.yaml`).
 
 ### Basic Structure
 
@@ -59,7 +59,7 @@ Each resource in the arrays can be defined in two ways:
 
 ## Adding a New Application
 
-1. **Locate your configuration file**: By default, it's at `~/.k8s-clone/config`. You can also use a custom path via the `K8S_CLONE_CONFIG` environment variable.
+1. **Locate your configuration file**: By default, it's at `~/.k8s-clone/config.yaml`. You can also use a custom path via the `K8S_CLONE_CONFIG` environment variable.
 
 2. **Add an app entry** to the `apps` array:
 

@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 CONFIG_DIR="$HOME/.k8s-clone"
-CONFIG_FILE="$CONFIG_DIR/config"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
 ENV_VAR_NAME="K8S_CLONE_CONFIG"
 
 # Colors for output
@@ -129,13 +129,13 @@ add_env_var() {
         cat >> "$shell_config" << EOF
 
 # K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
-set -x $ENV_VAR_NAME "\$HOME/.k8s-clone/config"
+set -x $ENV_VAR_NAME "\$HOME/.k8s-clone/config.yaml"
 EOF
     else
         cat >> "$shell_config" << EOF
 
 # K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
-export $ENV_VAR_NAME="\$HOME/.k8s-clone/config"
+export $ENV_VAR_NAME="\$HOME/.k8s-clone/config.yaml"
 EOF
     fi
     
