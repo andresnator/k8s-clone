@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import yaml from 'js-yaml';
 import { AppConfig } from './types.js';
 
 interface ClusterConfig {
@@ -52,15 +53,15 @@ export const CONFIG_ENV_VAR = 'K8S_CLONE_CONFIG';
 export const DEFAULT_CONFIG_DIR = path.join(os.homedir(), '.k8s-clone');
 
 /**
- * Default config file path (~/.k8s-clone/config).
+ * Default config file path (~/.k8s-clone/config.yaml).
  */
-export const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, 'config');
+export const DEFAULT_CONFIG_PATH = path.join(DEFAULT_CONFIG_DIR, 'config.yaml');
 
 /**
  * Resolves the config file path using the following priority:
  * 1. If configPath parameter is provided (not undefined), use it
  * 2. Check K8S_CLONE_CONFIG environment variable
- * 3. Fall back to ~/.k8s-clone/config
+ * 3. Fall back to ~/.k8s-clone/config.yaml
  */
 export function resolveConfigPath(configPath?: string): string {
     if (configPath !== undefined) {
@@ -88,6 +89,7 @@ export function ensureConfigDir(configPath: string): void {
 /**
  * Creates a default config file with the empty structure if it doesn't exist.
  * Returns true if the file was created, false if it already existed.
+ * Creates YAML format by default.
  */
 export function initializeConfigFile(configPath: string): boolean {
     if (fs.existsSync(configPath)) {
@@ -95,12 +97,13 @@ export function initializeConfigFile(configPath: string): boolean {
     }
     
     ensureConfigDir(configPath);
-    fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 4), 'utf-8');
+    const yamlContent = yaml.dump(DEFAULT_CONFIG, { indent: 2 });
+    fs.writeFileSync(configPath, yamlContent, 'utf-8');
     return true;
 }
 
 /**
- * Loads cluster, namespace, and resource configurations from a JSON file.
+ * Loads cluster, namespace, and resource configurations from a YAML or JSON file.
  * Returns null from methods when config is missing/invalid to trigger API fallback.
  */
 export class ConfigLoader {
@@ -123,9 +126,13 @@ export class ConfigLoader {
         if (fs.existsSync(this.configPath)) {
             try {
                 const fileContent = fs.readFileSync(this.configPath, 'utf-8');
-                this.config = JSON.parse(fileContent);
+                
+                // Parse as YAML (which also handles JSON since JSON is a subset of YAML)
+                // Use CORE_SCHEMA for security (only supports JSON-compatible types)
+                this.config = yaml.load(fileContent, { schema: yaml.CORE_SCHEMA }) as Config;
             } catch (error) {
-                console.warn(`[WARN] Failed to parse ${this.configPath}. Using default behavior.`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.warn(`[WARN] Failed to parse ${this.configPath}: ${errorMessage}. Using default behavior.`);
             }
         }
     }

@@ -51,17 +51,17 @@ npm run build
 
 ## Configuration
 
-k8s-clone uses an optional configuration file at `~/.k8s-clone/config` to store default cluster and namespace settings.
+k8s-clone uses an optional configuration file at `~/.k8s-clone/config.yaml` to store default cluster and namespace settings.
 
 **Setup**: Run `npm run setup` to create the configuration directory and file automatically.
 
 **Custom Location**: Set `K8S_CLONE_CONFIG` environment variable to use a different path.
 
-**Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.json` for structure details.
+**Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.yaml` for structure details.
 
 ### Environment Variables
 
-- `K8S_CLONE_CONFIG`: Set a custom path for the configuration file (default: `~/.k8s-clone/config`)
+- `K8S_CLONE_CONFIG`: Set a custom path for the configuration file (default: `~/.k8s-clone/config.yaml`)
 - `K8S_CLONE_SKIP_VERSION_CHECK`: Set to any truthy value (`true`, `1`, `yes`, or any non-empty string) to skip version update checks (useful for CI/CD environments)
 
 ## Usage
