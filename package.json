@@ -1,6 +1,6 @@
 {
     "name": "@andresnator/k8s-clone",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "publishConfig": {
         "access": "public"
     },
