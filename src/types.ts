@@ -47,3 +47,25 @@ export const SYSTEM_METADATA_FIELDS = [
     'ownerReferences',
     'managedFields',
 ] as const;
+
+/**
+ * Represents a resource within an app with optional spec overrides.
+ */
+export interface AppResource {
+    resource: string;
+    'overwrite-spec'?: Record<string, any>;
+}
+
+/**
+ * Configuration for a custom app grouping related Kubernetes resources.
+ */
+export interface AppConfig {
+    name: string;
+    context: string;
+    namespaces: string;
+    services?: AppResource[];
+    deployments?: AppResource[];
+    configMaps?: AppResource[];
+    secrets?: AppResource[];
+    persistentVolumeClaims?: AppResource[];
+}

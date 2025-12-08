@@ -7,6 +7,7 @@ import { Cleaner } from './cleaner.js';
 import { ConfigLoader } from './config.js';
 import { checkForUpdate, formatUpdateMessage, getCurrentVersion } from './version-checker.js';
 import chalk from 'chalk';
+import { AppConfig, AppResource } from './types.js';
 
 const config = new ConfigLoader();
 const PACKAGE_NAME = '@andresnator/k8s-clone';
@@ -40,7 +41,9 @@ async function main() {
     while (true) {
         try {
             console.log(''); // Spacing
-            const action = await ui.showMainMenu();
+            const apps = config.getApps();
+            const hasApps = apps !== null && apps.length > 0;
+            const action = await ui.showMainMenu(hasApps);
 
             if (action === 'exit') {
                 console.log(chalk.yellow('Goodbye!'));
@@ -51,6 +54,8 @@ async function main() {
                 await runCloneFlow(ui, contexts);
             } else if (action === 'clean') {
                 await runCleanFlow(ui, contexts);
+            } else if (action === 'apps') {
+                await runAppsFlow(ui, contexts);
             }
 
         } catch (error: any) {
@@ -203,6 +208,117 @@ async function runCleanFlow(ui: UI, contexts: string[]) {
     });
 
     ui.logSuccess('Cleanup process completed.');
+}
+
+async function runAppsFlow(ui: UI, contexts: string[]) {
+    console.log(chalk.cyan('\n--- Deploy App ---\n'));
+
+    const apps = config.getApps();
+    if (!apps || apps.length === 0) {
+        ui.logError('No apps configured in config file.');
+        return;
+    }
+
+    const appNames = apps.map(app => app.name);
+    const selectedAppName = await ui.selectApp(appNames);
+    
+    const app = config.getApp(selectedAppName);
+    if (!app) {
+        ui.logError(`App '${selectedAppName}' not found.`);
+        return;
+    }
+
+    ui.logInfo(`App: ${app.name}`);
+    ui.logInfo(`Source Context: ${app.context}`);
+    ui.logInfo(`Source Namespace: ${app.namespaces}`);
+
+    // Setup clients
+    const sourceClient = new K8sClient(app.context);
+    
+    // Select destination
+    const configClusters = config.getClusters();
+    const destCtx = await ui.selectContext(configClusters || contexts, 'Select Destination Context (Cluster):');
+    const destClient = new K8sClient(destCtx);
+
+    ui.logInfo(`Fetching namespaces from ${destCtx}...`);
+    const configDestNamespaces = config.getNamespaces(destCtx);
+    const destNamespaces = configDestNamespaces || await destClient.listNamespaces();
+    const destNs = await ui.selectNamespace(destNamespaces, 'Select Destination Namespace:');
+
+    if (app.context === destCtx && app.namespaces === destNs) {
+        ui.logError('Source and Destination must be different (either different cluster or different namespace).');
+        return;
+    }
+
+    // Extract resource names and overwrite-specs
+    const extractResources = (resources?: AppResource[]): { names: string[], overwrites: Map<string, Record<string, any>> } => {
+        const names: string[] = [];
+        const overwrites = new Map<string, Record<string, any>>();
+        
+        if (resources) {
+            for (const res of resources) {
+                names.push(res.resource);
+                if (res['overwrite-spec']) {
+                    overwrites.set(res.resource, res['overwrite-spec']);
+                }
+            }
+        }
+        return { names, overwrites };
+    };
+
+    const services = extractResources(app.services);
+    const deployments = extractResources(app.deployments);
+    const configMaps = extractResources(app.configMaps);
+    const secrets = extractResources(app.secrets);
+    const pvcs = extractResources(app.persistentVolumeClaims);
+
+    // Merge all overwrite-specs into one map
+    const allOverwrites = new Map<string, Record<string, any>>();
+    for (const [name, spec] of services.overwrites) allOverwrites.set(name, spec);
+    for (const [name, spec] of deployments.overwrites) allOverwrites.set(name, spec);
+    for (const [name, spec] of configMaps.overwrites) allOverwrites.set(name, spec);
+    for (const [name, spec] of secrets.overwrites) allOverwrites.set(name, spec);
+    for (const [name, spec] of pvcs.overwrites) allOverwrites.set(name, spec);
+
+    const migrator = new Migrator(sourceClient, destClient, ui);
+
+    const summary = [
+        `Services: ${services.names.length}`,
+        `Deployments: ${deployments.names.length}`,
+        `ConfigMaps: ${configMaps.names.length}`,
+        `Secrets: ${secrets.names.length}`,
+        `PVCs: ${pvcs.names.length}`,
+    ];
+
+    console.log(chalk.yellow('\nApp Deployment Summary:'));
+    summary.forEach(s => console.log(chalk.white(`- ${s}`)));
+    
+    if (allOverwrites.size > 0) {
+        console.log(chalk.cyan(`\nResources with overwrite-spec: ${allOverwrites.size}`));
+    }
+    console.log('');
+
+    const confirmed = await ui.confirmAction(`Deploy app '${app.name}' from ${app.namespaces} to ${destNs}?`);
+
+    if (!confirmed) {
+        console.log(chalk.yellow('Deployment cancelled.'));
+        return;
+    }
+
+    await migrator.migrateResources(
+        app.namespaces,
+        destNs,
+        {
+            services: services.names,
+            deployments: deployments.names,
+            configMaps: configMaps.names,
+            secrets: secrets.names,
+            pvcs: pvcs.names,
+        },
+        allOverwrites
+    );
+
+    ui.logSuccess('App deployment completed.');
 }
 
 // Parse command-line arguments
