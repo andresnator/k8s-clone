@@ -568,4 +568,23 @@ apps:
         expect(apps).toHaveLength(1);
         expect(apps![0].name).toBe('test-app');
     });
+
+    it('should reject unsafe YAML tags for security', () => {
+        const unsafeYaml = `
+clusters:
+  - name: test
+malicious: !!js/function >
+  function() { return 'exploit'; }
+`;
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(unsafeYaml);
+        const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+        const loader = new ConfigLoader('config.yaml');
+        const clusters = loader.getClusters();
+
+        expect(consoleSpy).toHaveBeenCalled();
+        expect(clusters).toBeNull();
+        consoleSpy.mockRestore();
+    });
 });
