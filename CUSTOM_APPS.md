@@ -133,8 +133,10 @@ This changes the replica count to 5, while keeping all other deployment specific
 {
   "resource": "data-pvc",
   "overwrite-spec": {
-    "capacity": {
-      "storage": "100Gi"
+    "resources": {
+      "requests": {
+        "storage": "100Gi"
+      }
     }
   }
 }
