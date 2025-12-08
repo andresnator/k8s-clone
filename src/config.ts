@@ -131,7 +131,8 @@ export class ConfigLoader {
                 // Use CORE_SCHEMA for security (only supports JSON-compatible types)
                 this.config = yaml.load(fileContent, { schema: yaml.CORE_SCHEMA }) as Config;
             } catch (error) {
-                console.warn(`[WARN] Failed to parse ${this.configPath}. Using default behavior.`);
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                console.warn(`[WARN] Failed to parse ${this.configPath}: ${errorMessage}. Using default behavior.`);
             }
         }
     }
