@@ -20,7 +20,7 @@ function isPlainObject(value: any): boolean {
  */
 export function deepMerge(target: any, overwrite: any): void {
     for (const key in overwrite) {
-        if (Object.prototype.hasOwnProperty.call(overwrite, key)) {
+        if (Object.hasOwn(overwrite, key)) {
             const overwriteValue = overwrite[key];
             const targetValue = target[key];
 

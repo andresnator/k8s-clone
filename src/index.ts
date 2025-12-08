@@ -254,9 +254,14 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
     const extractResources = (resources?: AppResource[]): { names: string[], overwrites: Map<string, Record<string, any>> } => {
         const names: string[] = [];
         const overwrites = new Map<string, Record<string, any>>();
+        const seenNames = new Set<string>();
         
         if (resources) {
             for (const res of resources) {
+                if (seenNames.has(res.resource)) {
+                    ui.logWarning(`Duplicate resource '${res.resource}' found in app. Only the last overwrite-spec will be used.`);
+                }
+                seenNames.add(res.resource);
                 names.push(res.resource);
                 if (res['overwrite-spec']) {
                     overwrites.set(res.resource, res['overwrite-spec']);
@@ -266,6 +271,16 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
         return { names, overwrites };
     };
 
+    const mergeOverwrites = (...overwriteMaps: Map<string, Record<string, any>>[]): Map<string, Record<string, any>> => {
+        const merged = new Map<string, Record<string, any>>();
+        for (const overwriteMap of overwriteMaps) {
+            for (const [name, spec] of overwriteMap) {
+                merged.set(name, spec);
+            }
+        }
+        return merged;
+    };
+
     const services = extractResources(app.services);
     const deployments = extractResources(app.deployments);
     const configMaps = extractResources(app.configMaps);
@@ -273,12 +288,13 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
     const pvcs = extractResources(app.persistentVolumeClaims);
 
     // Merge all overwrite-specs into one map
-    const allOverwrites = new Map<string, Record<string, any>>();
-    for (const [name, spec] of services.overwrites) allOverwrites.set(name, spec);
-    for (const [name, spec] of deployments.overwrites) allOverwrites.set(name, spec);
-    for (const [name, spec] of configMaps.overwrites) allOverwrites.set(name, spec);
-    for (const [name, spec] of secrets.overwrites) allOverwrites.set(name, spec);
-    for (const [name, spec] of pvcs.overwrites) allOverwrites.set(name, spec);
+    const allOverwrites = mergeOverwrites(
+        services.overwrites,
+        deployments.overwrites,
+        configMaps.overwrites,
+        secrets.overwrites,
+        pvcs.overwrites
+    );
 
     const migrator = new Migrator(sourceClient, destClient, ui);
 
