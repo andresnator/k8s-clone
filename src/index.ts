@@ -88,7 +88,22 @@ async function runCloneFlow(ui: UI, contexts: string[]) {
     const namespaces = configSourceNamespaces || await sourceClient.listNamespaces();
     const sourceNs = await ui.selectNamespace(namespaces, 'Select Source Namespace:');
 
-    // 2. Destination Selection
+    // 2. Resource Selection
+    ui.logInfo(`Fetching resources from ${sourceNs} in ${sourceCtx}...`);
+
+    const services = await getResources(sourceNs, 'services', () => sourceClient.listServices(sourceNs));
+    const deployments = await getResources(sourceNs, 'deployments', () => sourceClient.listDeployments(sourceNs));
+    const configMaps = await getResources(sourceNs, 'configMaps', () => sourceClient.listConfigMaps(sourceNs));
+    const secrets = await getResources(sourceNs, 'secrets', () => sourceClient.listSecrets(sourceNs));
+    const pvcs = await getResources(sourceNs, 'persistentVolumeClaims', () => sourceClient.listPVCs(sourceNs));
+
+    const selectedServices = await ui.selectResources('Services', services);
+    const selectedDeployments = await ui.selectResources('Deployments', deployments);
+    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps);
+    const selectedSecrets = await ui.selectResources('Secrets', secrets);
+    const selectedPVCs = await ui.selectResources('PVCs', pvcs);
+
+    // 3. Destination Selection
     const destCtx = await ui.selectContext(configClusters || contexts, 'Select Destination Context (Cluster):');
     const destClient = new K8sClient(destCtx);
 
@@ -103,20 +118,6 @@ async function runCloneFlow(ui: UI, contexts: string[]) {
     }
 
     const migrator = new Migrator(sourceClient, destClient, ui);
-
-    ui.logInfo(`Fetching resources from ${sourceNs} in ${sourceCtx}...`);
-
-    const services = await getResources(sourceNs, 'services', () => sourceClient.listServices(sourceNs));
-    const deployments = await getResources(sourceNs, 'deployments', () => sourceClient.listDeployments(sourceNs));
-    const configMaps = await getResources(sourceNs, 'configMaps', () => sourceClient.listConfigMaps(sourceNs));
-    const secrets = await getResources(sourceNs, 'secrets', () => sourceClient.listSecrets(sourceNs));
-    const pvcs = await getResources(sourceNs, 'persistentVolumeClaims', () => sourceClient.listPVCs(sourceNs));
-
-    const selectedServices = await ui.selectResources('Services', services);
-    const selectedDeployments = await ui.selectResources('Deployments', deployments);
-    const selectedConfigMaps = await ui.selectResources('ConfigMaps', configMaps);
-    const selectedSecrets = await ui.selectResources('Secrets', secrets);
-    const selectedPVCs = await ui.selectResources('PVCs', pvcs);
 
     const summary = [
         `Services: ${selectedServices.length}`,
