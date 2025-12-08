@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/andresnator/k8s-clone/compare/v1.1.0...v1.2.0) (2025-12-08)
+
+
+### Features
+
+* Merge pull request [#53](https://github.com/andresnator/k8s-clone/issues/53) from andresnator/develop ([9d828c4](https://github.com/andresnator/k8s-clone/commit/9d828c4d9ba23f4c966e2fc02cd38accf6809ceb))
+
 # [1.1.0](https://github.com/andresnator/k8s-clone/compare/v1.0.1...v1.1.0) (2025-12-08)
 
 
