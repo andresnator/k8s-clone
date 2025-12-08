@@ -210,13 +210,41 @@ async function runCleanFlow(ui: UI, contexts: string[]) {
     ui.logSuccess('Cleanup process completed.');
 }
 
-async function runAppsFlow(ui: UI, contexts: string[]) {
-    console.log(chalk.cyan('\n--- Deploy App ---\n'));
+function extractAppResources(resources: AppResource[] | undefined, ui: UI): { names: string[], overwrites: Map<string, Record<string, any>> } {
+    const names: string[] = [];
+    const overwrites = new Map<string, Record<string, any>>();
+    const seenNames = new Set<string>();
+    
+    if (resources) {
+        for (const res of resources) {
+            if (seenNames.has(res.resource)) {
+                ui.logWarning(`Duplicate resource '${res.resource}' found in app. Only the last overwrite-spec will be used.`);
+            }
+            seenNames.add(res.resource);
+            names.push(res.resource);
+            if (res['overwrite-spec']) {
+                overwrites.set(res.resource, res['overwrite-spec']);
+            }
+        }
+    }
+    return { names, overwrites };
+}
 
+function mergeOverwriteMaps(...overwriteMaps: Map<string, Record<string, any>>[]): Map<string, Record<string, any>> {
+    const merged = new Map<string, Record<string, any>>();
+    for (const overwriteMap of overwriteMaps) {
+        for (const [name, spec] of overwriteMap) {
+            merged.set(name, spec);
+        }
+    }
+    return merged;
+}
+
+async function selectAppAndDestination(ui: UI, contexts: string[]): Promise<{ app: AppConfig, destCtx: string, destNs: string, sourceClient: K8sClient, destClient: K8sClient } | null> {
     const apps = config.getApps();
     if (!apps || apps.length === 0) {
         ui.logError('No apps configured in config file.');
-        return;
+        return null;
     }
 
     const appNames = apps.map(app => app.name);
@@ -225,17 +253,15 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
     const app = config.getApp(selectedAppName);
     if (!app) {
         ui.logError(`App '${selectedAppName}' not found.`);
-        return;
+        return null;
     }
 
     ui.logInfo(`App: ${app.name}`);
     ui.logInfo(`Source Context: ${app.context}`);
     ui.logInfo(`Source Namespace: ${app.namespaces}`);
 
-    // Setup clients
     const sourceClient = new K8sClient(app.context);
     
-    // Select destination
     const configClusters = config.getClusters();
     const destCtx = await ui.selectContext(configClusters || contexts, 'Select Destination Context (Cluster):');
     const destClient = new K8sClient(destCtx);
@@ -247,48 +273,47 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
 
     if (app.context === destCtx && app.namespaces === destNs) {
         ui.logError('Source and Destination must be different (either different cluster or different namespace).');
+        return null;
+    }
+
+    return { app, destCtx, destNs, sourceClient, destClient };
+}
+
+function displayAppDeploymentSummary(services: number, deployments: number, configMaps: number, secrets: number, pvcs: number, overwriteCount: number): void {
+    const summary = [
+        `Services: ${services}`,
+        `Deployments: ${deployments}`,
+        `ConfigMaps: ${configMaps}`,
+        `Secrets: ${secrets}`,
+        `PVCs: ${pvcs}`,
+    ];
+
+    console.log(chalk.yellow('\nApp Deployment Summary:'));
+    summary.forEach(s => console.log(chalk.white(`- ${s}`)));
+    
+    if (overwriteCount > 0) {
+        console.log(chalk.cyan(`\nResources with overwrite-spec: ${overwriteCount}`));
+    }
+    console.log('');
+}
+
+async function runAppsFlow(ui: UI, contexts: string[]) {
+    console.log(chalk.cyan('\n--- Deploy App ---\n'));
+
+    const selection = await selectAppAndDestination(ui, contexts);
+    if (!selection) {
         return;
     }
 
-    // Extract resource names and overwrite-specs
-    const extractResources = (resources?: AppResource[]): { names: string[], overwrites: Map<string, Record<string, any>> } => {
-        const names: string[] = [];
-        const overwrites = new Map<string, Record<string, any>>();
-        const seenNames = new Set<string>();
-        
-        if (resources) {
-            for (const res of resources) {
-                if (seenNames.has(res.resource)) {
-                    ui.logWarning(`Duplicate resource '${res.resource}' found in app. Only the last overwrite-spec will be used.`);
-                }
-                seenNames.add(res.resource);
-                names.push(res.resource);
-                if (res['overwrite-spec']) {
-                    overwrites.set(res.resource, res['overwrite-spec']);
-                }
-            }
-        }
-        return { names, overwrites };
-    };
+    const { app, destNs, sourceClient, destClient } = selection;
 
-    const mergeOverwrites = (...overwriteMaps: Map<string, Record<string, any>>[]): Map<string, Record<string, any>> => {
-        const merged = new Map<string, Record<string, any>>();
-        for (const overwriteMap of overwriteMaps) {
-            for (const [name, spec] of overwriteMap) {
-                merged.set(name, spec);
-            }
-        }
-        return merged;
-    };
+    const services = extractAppResources(app.services, ui);
+    const deployments = extractAppResources(app.deployments, ui);
+    const configMaps = extractAppResources(app.configMaps, ui);
+    const secrets = extractAppResources(app.secrets, ui);
+    const pvcs = extractAppResources(app.persistentVolumeClaims, ui);
 
-    const services = extractResources(app.services);
-    const deployments = extractResources(app.deployments);
-    const configMaps = extractResources(app.configMaps);
-    const secrets = extractResources(app.secrets);
-    const pvcs = extractResources(app.persistentVolumeClaims);
-
-    // Merge all overwrite-specs into one map
-    const allOverwrites = mergeOverwrites(
+    const allOverwrites = mergeOverwriteMaps(
         services.overwrites,
         deployments.overwrites,
         configMaps.overwrites,
@@ -296,23 +321,14 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
         pvcs.overwrites
     );
 
-    const migrator = new Migrator(sourceClient, destClient, ui);
-
-    const summary = [
-        `Services: ${services.names.length}`,
-        `Deployments: ${deployments.names.length}`,
-        `ConfigMaps: ${configMaps.names.length}`,
-        `Secrets: ${secrets.names.length}`,
-        `PVCs: ${pvcs.names.length}`,
-    ];
-
-    console.log(chalk.yellow('\nApp Deployment Summary:'));
-    summary.forEach(s => console.log(chalk.white(`- ${s}`)));
-    
-    if (allOverwrites.size > 0) {
-        console.log(chalk.cyan(`\nResources with overwrite-spec: ${allOverwrites.size}`));
-    }
-    console.log('');
+    displayAppDeploymentSummary(
+        services.names.length,
+        deployments.names.length,
+        configMaps.names.length,
+        secrets.names.length,
+        pvcs.names.length,
+        allOverwrites.size
+    );
 
     const confirmed = await ui.confirmAction(`Deploy app '${app.name}' from ${app.namespaces} to ${destNs}?`);
 
@@ -321,6 +337,7 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
         return;
     }
 
+    const migrator = new Migrator(sourceClient, destClient, ui);
     await migrator.migrateResources(
         app.namespaces,
         destNs,

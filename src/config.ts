@@ -151,9 +151,6 @@ export class ConfigLoader {
         return null;
     }
 
-    /**
-     * Returns the list of configured apps, or null if not configured.
-     */
     getApps(): AppConfig[] | null {
         if (this.config?.apps && this.config.apps.length > 0) {
             return this.config.apps;
@@ -161,9 +158,6 @@ export class ConfigLoader {
         return null;
     }
 
-    /**
-     * Returns a specific app by name, or null if not found.
-     */
     getApp(name: string): AppConfig | null {
         const apps = this.getApps();
         if (apps) {
