@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { AppConfig } from './types.js';
 
 interface ClusterConfig {
     name: string;
@@ -22,6 +23,7 @@ interface Config {
     configMaps?: Record<string, ResourceConfig[]>;
     secrets?: Record<string, ResourceConfig[]>;
     persistentVolumeClaims?: Record<string, ResourceConfig[]>;
+    apps?: AppConfig[];
 }
 
 /**
@@ -35,7 +37,8 @@ export const DEFAULT_CONFIG: Config = {
     deployments: {},
     configMaps: {},
     secrets: {},
-    persistentVolumeClaims: {}
+    persistentVolumeClaims: {},
+    apps: []
 };
 
 /**
@@ -144,6 +147,21 @@ export class ConfigLoader {
     getResources(type: 'services' | 'deployments' | 'configMaps' | 'secrets' | 'persistentVolumeClaims', namespace: string): string[] | null {
         if (this.config && this.config[type] && this.config[type]![namespace]) {
             return this.config[type]![namespace].map(r => r.name);
+        }
+        return null;
+    }
+
+    getApps(): AppConfig[] | null {
+        if (this.config?.apps && this.config.apps.length > 0) {
+            return this.config.apps;
+        }
+        return null;
+    }
+
+    getApp(name: string): AppConfig | null {
+        const apps = this.getApps();
+        if (apps) {
+            return apps.find(app => app.name === name) || null;
         }
         return null;
     }

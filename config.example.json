@@ -62,5 +62,56 @@
                 "name": "source-data-pvc"
             }
         ]
-    }
+    },
+    "apps": [
+        {
+            "name": "Example-APP",
+            "context": "source",
+            "namespaces": "source",
+            "services": [
+                {
+                    "resource": "backend"
+                },
+                {
+                    "resource": "frontend"
+                }
+            ],
+            "deployments": [
+                {
+                    "resource": "backend-deployment",
+                    "overwrite-spec": {
+                        "replicas": 3
+                    }
+                },
+                {
+                    "resource": "frontend-deployment"
+                }
+            ],
+            "configMaps": [
+                {
+                    "resource": "app-config"
+                }
+            ],
+            "secrets": [
+                {
+                    "resource": "db-credentials"
+                },
+                {
+                    "resource": "tls-cert"
+                }
+            ],
+            "persistentVolumeClaims": [
+                {
+                    "resource": "source-data-pvc",
+                    "overwrite-spec": {
+                        "resources": {
+                            "requests": {
+                                "storage": "2Gi"
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ]
 }

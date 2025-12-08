@@ -5,6 +5,7 @@ import { spawn } from 'child_process';
 import { ResourceSelections, ResourceType } from './types.js';
 import { MetadataCleaner } from './metadata-cleaner.js';
 import { ResourceHandlerFactory } from './resource-handlers.js';
+import { applyOverwriteSpec } from './spec-overwriter.js';
 
 /**
  * Handles migration of Kubernetes resources between namespaces/clusters.
@@ -14,7 +15,7 @@ export class Migrator {
     private sourceClient: K8sClient;
     private destClient: K8sClient;
     private ui: UI;
-    private handlers: Map<ResourceType, { migrate: (name: string, sourceNs: string, destNs: string) => Promise<void> }>;
+    private handlers: Map<ResourceType, { migrate: (name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>) => Promise<void> }>;
 
     constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
         this.sourceClient = sourceClient;
@@ -45,7 +46,8 @@ export class Migrator {
     async migrateResources(
         sourceNs: string,
         destNs: string,
-        selections: ResourceSelections
+        selections: ResourceSelections,
+        overwriteSpecs?: Map<string, Record<string, any>>
     ) {
         // Create a map of resource type to selected names for ordered processing
         const resourceMap = new Map<ResourceType, string[]>([
@@ -60,13 +62,14 @@ export class Migrator {
             const handler = this.handlers.get(resourceType);
             if (handler) {
                 for (const name of names) {
-                    await handler.migrate(name, sourceNs, destNs);
+                    const overwriteSpec = overwriteSpecs?.get(name);
+                    await handler.migrate(name, sourceNs, destNs, overwriteSpec);
                 }
             }
         }
 
         // Handle PVCs separately due to complex data migration logic
-        await this.migratePVCs(sourceNs, destNs, selections.pvcs);
+        await this.migratePVCs(sourceNs, destNs, selections.pvcs, overwriteSpecs);
     }
 
     /**
@@ -75,7 +78,7 @@ export class Migrator {
      * - Special handling for manual storage class
      * - Data migration via temporary pods
      */
-    private async migratePVCs(sourceNs: string, destNs: string, pvcNames: string[]): Promise<void> {
+    private async migratePVCs(sourceNs: string, destNs: string, pvcNames: string[], overwriteSpecs?: Map<string, Record<string, any>>): Promise<void> {
         const sourceCore = this.sourceClient.getCoreApi();
         const destCore = this.destClient.getCoreApi();
 
@@ -94,6 +97,12 @@ export class Migrator {
 
                 // Remove status
                 delete newPvc.status;
+
+                // Apply overwrite-spec if provided
+                const overwriteSpec = overwriteSpecs?.get(name);
+                if (overwriteSpec) {
+                    applyOverwriteSpec(newPvc, overwriteSpec);
+                }
 
                 await destCore.createNamespacedPersistentVolumeClaim({ namespace: destNs, body: newPvc });
                 this.ui.logSuccess(`PVC ${name} created in destination.`);
