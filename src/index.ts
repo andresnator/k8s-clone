@@ -231,10 +231,13 @@ function extractAppResources(resources: AppResource[] | undefined, ui: UI): { na
     return { names, overwrites };
 }
 
-function mergeOverwriteMaps(...overwriteMaps: Map<string, Record<string, any>>[]): Map<string, Record<string, any>> {
+function mergeOverwriteMaps(ui: UI, ...overwriteMaps: Map<string, Record<string, any>>[]): Map<string, Record<string, any>> {
     const merged = new Map<string, Record<string, any>>();
     for (const overwriteMap of overwriteMaps) {
         for (const [name, spec] of overwriteMap) {
+            if (merged.has(name)) {
+                ui.logWarning(`Resource name '${name}' appears in multiple resource types. Last overwrite-spec will be used.`);
+            }
             merged.set(name, spec);
         }
     }
@@ -315,6 +318,7 @@ async function runAppsFlow(ui: UI, contexts: string[]) {
     const pvcs = extractAppResources(app.persistentVolumeClaims, ui);
 
     const allOverwrites = mergeOverwriteMaps(
+        ui,
         services.overwrites,
         deployments.overwrites,
         configMaps.overwrites,
