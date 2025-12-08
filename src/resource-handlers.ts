@@ -3,6 +3,7 @@ import { K8sClient } from './k8s.js';
 import { UI } from './ui.js';
 import { MetadataCleaner } from './metadata-cleaner.js';
 import { ResourceType } from './types.js';
+import { applyOverwriteSpec } from './spec-overwriter.js';
 
 /**
  * Interface for resource migration handlers.
@@ -10,7 +11,7 @@ import { ResourceType } from './types.js';
  */
 export interface ResourceHandler {
     resourceType: string;
-    migrate(name: string, sourceNs: string, destNs: string): Promise<void>;
+    migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void>;
 }
 
 /**
@@ -32,7 +33,7 @@ abstract class BaseResourceHandler implements ResourceHandler {
         this.ui = ui;
     }
 
-    abstract migrate(name: string, sourceNs: string, destNs: string): Promise<void>;
+    abstract migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void>;
 
     protected handleError(name: string, error: any): void {
         if (error.body && error.body.reason === 'AlreadyExists') {
@@ -57,10 +58,13 @@ export class ConfigMapHandler extends BaseResourceHandler {
         this.destApi = destClient.getCoreApi();
     }
 
-    async migrate(name: string, sourceNs: string, destNs: string): Promise<void> {
+    async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedConfigMap({ name, namespace: sourceNs });
             const cleaned = MetadataCleaner.clean(res, destNs);
+            if (overwriteSpec) {
+                applyOverwriteSpec(cleaned, overwriteSpec);
+            }
             await this.destApi.createNamespacedConfigMap({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -83,10 +87,13 @@ export class SecretHandler extends BaseResourceHandler {
         this.destApi = destClient.getCoreApi();
     }
 
-    async migrate(name: string, sourceNs: string, destNs: string): Promise<void> {
+    async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedSecret({ name, namespace: sourceNs });
             const cleaned = MetadataCleaner.clean(res, destNs);
+            if (overwriteSpec) {
+                applyOverwriteSpec(cleaned, overwriteSpec);
+            }
             await this.destApi.createNamespacedSecret({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -109,10 +116,13 @@ export class ServiceHandler extends BaseResourceHandler {
         this.destApi = destClient.getCoreApi();
     }
 
-    async migrate(name: string, sourceNs: string, destNs: string): Promise<void> {
+    async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedService({ name, namespace: sourceNs });
             const cleaned = MetadataCleaner.clean(res, destNs);
+            if (overwriteSpec) {
+                applyOverwriteSpec(cleaned, overwriteSpec);
+            }
             await this.destApi.createNamespacedService({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -135,10 +145,13 @@ export class DeploymentHandler extends BaseResourceHandler {
         this.destApi = destClient.getAppsApi();
     }
 
-    async migrate(name: string, sourceNs: string, destNs: string): Promise<void> {
+    async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedDeployment({ name, namespace: sourceNs });
             const cleaned = MetadataCleaner.clean(res, destNs);
+            if (overwriteSpec) {
+                applyOverwriteSpec(cleaned, overwriteSpec);
+            }
             await this.destApi.createNamespacedDeployment({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {

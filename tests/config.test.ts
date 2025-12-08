@@ -233,6 +233,144 @@ describe('ConfigLoader', () => {
             expect(configPath).toContain('my-config.json');
         });
     });
+
+    describe('getApps', () => {
+        it('should return apps when config has apps', () => {
+            const configWithApps = {
+                ...mockConfig,
+                apps: [
+                    {
+                        name: 'test-app',
+                        context: 'cluster1',
+                        namespaces: 'ns1',
+                        services: [{ resource: 'svc1' }],
+                        deployments: [{ resource: 'dep1' }]
+                    }
+                ]
+            };
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const apps = loader.getApps();
+
+            expect(apps).not.toBeNull();
+            expect(apps).toHaveLength(1);
+            expect(apps![0].name).toBe('test-app');
+        });
+
+        it('should return null when config has no apps', () => {
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(mockConfig));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const apps = loader.getApps();
+
+            expect(apps).toBeNull();
+        });
+
+        it('should return null when config has empty apps array', () => {
+            const configWithEmptyApps = { ...mockConfig, apps: [] };
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithEmptyApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const apps = loader.getApps();
+
+            expect(apps).toBeNull();
+        });
+
+        it('should return null when config is not loaded', () => {
+            mockExistsSync.mockReturnValue(false);
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const apps = loader.getApps();
+
+            expect(apps).toBeNull();
+        });
+
+        it('should return multiple apps', () => {
+            const configWithMultipleApps = {
+                ...mockConfig,
+                apps: [
+                    { name: 'app1', context: 'cluster1', namespaces: 'ns1' },
+                    { name: 'app2', context: 'cluster2', namespaces: 'ns2' }
+                ]
+            };
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithMultipleApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const apps = loader.getApps();
+
+            expect(apps).not.toBeNull();
+            expect(apps).toHaveLength(2);
+        });
+    });
+
+    describe('getApp', () => {
+        const configWithApps = {
+            ...mockConfig,
+            apps: [
+                {
+                    name: 'test-app',
+                    context: 'cluster1',
+                    namespaces: 'ns1',
+                    services: [{ resource: 'svc1' }]
+                },
+                {
+                    name: 'other-app',
+                    context: 'cluster2',
+                    namespaces: 'ns2',
+                    deployments: [{ resource: 'dep1' }]
+                }
+            ]
+        };
+
+        it('should return specific app by name', () => {
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const app = loader.getApp('test-app');
+
+            expect(app).not.toBeNull();
+            expect(app!.name).toBe('test-app');
+            expect(app!.context).toBe('cluster1');
+        });
+
+        it('should return null when app not found', () => {
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const app = loader.getApp('non-existent-app');
+
+            expect(app).toBeNull();
+        });
+
+        it('should return null when no apps are configured', () => {
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(mockConfig));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const app = loader.getApp('test-app');
+
+            expect(app).toBeNull();
+        });
+
+        it('should return correct app when multiple apps exist', () => {
+            mockExistsSync.mockReturnValue(true);
+            mockReadFileSync.mockReturnValue(JSON.stringify(configWithApps));
+
+            const loader = new ConfigLoader('k8s-defaults.json');
+            const app = loader.getApp('other-app');
+
+            expect(app).not.toBeNull();
+            expect(app!.name).toBe('other-app');
+            expect(app!.context).toBe('cluster2');
+        });
+    });
 });
 
 describe('resolveConfigPath', () => {
@@ -343,7 +481,8 @@ describe('DEFAULT_CONFIG', () => {
             deployments: {},
             configMaps: {},
             secrets: {},
-            persistentVolumeClaims: {}
+            persistentVolumeClaims: {},
+            apps: []
         });
     });
 });

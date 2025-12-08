@@ -19,17 +19,24 @@ export class UI {
         console.log(''); // Ensure spacing after banner
     }
 
-    async showMainMenu(): Promise<'clone' | 'clean' | 'exit'> {
+    async showMainMenu(hasApps: boolean): Promise<'clone' | 'clean' | 'apps' | 'exit'> {
+        const choices = [
+            { name: 'Clone Resources (Cluster to Cluster)', value: 'clone' },
+            { name: 'Clean Namespace (Delete Resources)', value: 'clean' },
+        ];
+        
+        if (hasApps) {
+            choices.push({ name: 'Apps (Deploy Configured Applications)', value: 'apps' });
+        }
+        
+        choices.push({ name: 'Exit', value: 'exit' });
+
         const { action } = await inquirer.prompt([
             {
                 type: 'list',
                 name: 'action',
                 message: 'What would you like to do?',
-                choices: [
-                    { name: 'Clone Resources (Cluster to Cluster)', value: 'clone' },
-                    { name: 'Clean Namespace (Delete Resources)', value: 'clean' },
-                    { name: 'Exit', value: 'exit' },
-                ],
+                choices: choices,
             },
         ]);
         return action;
@@ -144,5 +151,29 @@ export class UI {
 
     logError(message: string) {
         console.log(chalk.red(`[ERROR] ${message}`));
+    }
+
+    /**
+     * Displays a list of apps and allows user to select one.
+     */
+    async selectApp(apps: string[]): Promise<string> {
+        const choices = [...apps, new inquirer.Separator(), { name: chalk.yellow('[ Back to Main Menu ]'), value: 'BACK' }];
+        const { app } = await inquirer.prompt([
+            {
+                type: 'list',
+                name: 'app',
+                message: 'Select an App to deploy:',
+                choices: choices,
+            },
+        ]);
+
+        if (app === 'BACK') {
+            throw new BackError();
+        }
+        return app;
+    }
+
+    logWarning(message: string) {
+        console.log(chalk.yellow(`[WARN] ${message}`));
     }
 }
