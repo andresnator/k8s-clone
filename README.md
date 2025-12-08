@@ -8,7 +8,7 @@
 [![CodeQL](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml/badge.svg)](https://github.com/andresnator/k8s-clone/actions/workflows/codeql.yml)
 [![npm version](https://badge.fury.io/js/@andresnator%2Fk8s-clone.svg)](https://badge.fury.io/js/@andresnator%2Fk8s-clone)
 
-<a href="https://buymeacoffee.com/andresnator"><img src="https://github.com/user-attachments/assets/c720fbfe-bae5-4c03-b038-eccf8c71e9aa" alt="Buy Me a Coffee"></a>
+<a href="https://buymeacoffee.com/andresnator"><img src="https://github.com/user-attachments/assets/c720fbfe-bae5-4c03-b038-eccf8c71e9aa" alt="Buy Me a Coffee" width="150"></a>
 
 A CLI tool to clone and migrate Kubernetes resources across namespaces.
 
