@@ -11,16 +11,23 @@ function isPlainObject(value: any): boolean {
 }
 
 /**
+ * Checks if a key is safe to merge (not a prototype pollution key).
+ */
+function isSafeKey(key: string): boolean {
+    return key !== '__proto__' && key !== 'constructor' && key !== 'prototype';
+}
+
+/**
  * Deep merges the overwrite object into the target object.
  * Only properties present in overwrite will be modified in target.
- * Supports nested objects.
+ * Supports nested objects. Protects against prototype pollution.
  * 
  * @param target - The target object to merge into (will be modified)
  * @param overwrite - The object containing values to overwrite
  */
 export function deepMerge(target: any, overwrite: any): void {
     for (const key in overwrite) {
-        if (Object.hasOwn(overwrite, key)) {
+        if (Object.hasOwn(overwrite, key) && isSafeKey(key)) {
             const overwriteValue = overwrite[key];
             const targetValue = target[key];
 

@@ -134,6 +134,38 @@ describe('spec-overwriter', () => {
                 }
             });
         });
+
+        it('should prevent prototype pollution via __proto__', () => {
+            const target = { a: 1 };
+            const overwrite = JSON.parse('{"__proto__": {"polluted": "yes"}}');
+            
+            deepMerge(target, overwrite);
+            
+            // Verify prototype was not polluted
+            expect((target as any).polluted).toBeUndefined();
+            expect(Object.prototype.hasOwnProperty.call(target, '__proto__')).toBe(false);
+        });
+
+        it('should prevent prototype pollution via constructor', () => {
+            const target = { a: 1 };
+            const overwrite = { constructor: { polluted: 'yes' } };
+            
+            deepMerge(target, overwrite);
+            
+            // Verify constructor was not modified
+            expect((target as any).polluted).toBeUndefined();
+            expect(target.constructor).toBe(Object);
+        });
+
+        it('should prevent prototype pollution via prototype', () => {
+            const target = { a: 1 };
+            const overwrite = { prototype: { polluted: 'yes' } };
+            
+            deepMerge(target, overwrite);
+            
+            // Verify prototype property was not set
+            expect((target as any).prototype).toBeUndefined();
+        });
     });
 
     describe('applyOverwriteSpec', () => {
