@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 CONFIG_DIR="$HOME/.k8s-clone"
-CONFIG_FILE="$CONFIG_DIR/config"
+CONFIG_FILE="$CONFIG_DIR/config.yaml"
 ENV_VAR_NAME="K8S_CLONE_CONFIG"
 
 # Colors for output
@@ -75,15 +75,14 @@ create_config() {
     # Create config file with default empty structure if it doesn't exist
     if [[ ! -f "$CONFIG_FILE" ]]; then
         cat > "$CONFIG_FILE" << 'EOF'
-{
-    "clusters": [],
-    "namespaces": {},
-    "services": {},
-    "deployments": {},
-    "configMaps": {},
-    "secrets": {},
-    "persistentVolumeClaims": {}
-}
+clusters: []
+namespaces: {}
+services: {}
+deployments: {}
+configMaps: {}
+secrets: {}
+persistentVolumeClaims: {}
+apps: []
 EOF
         info "Created config file: $CONFIG_FILE"
     else
@@ -130,13 +129,13 @@ add_env_var() {
         cat >> "$shell_config" << EOF
 
 # K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
-set -x $ENV_VAR_NAME "\$HOME/.k8s-clone/config"
+set -x $ENV_VAR_NAME "\$HOME/.k8s-clone/config.yaml"
 EOF
     else
         cat >> "$shell_config" << EOF
 
 # K8s-clone configuration file path - Used by k8s-clone tool to store cluster defaults
-export $ENV_VAR_NAME="\$HOME/.k8s-clone/config"
+export $ENV_VAR_NAME="\$HOME/.k8s-clone/config.yaml"
 EOF
     fi
     
@@ -163,13 +162,14 @@ main() {
     echo "  \$ nano $CONFIG_FILE"
     echo ""
     echo "Example config with clusters and namespaces:"
-    echo '  {'
-    echo '    "clusters": [{ "name": "production" }, { "name": "staging" }],'
-    echo '    "namespaces": {'
-    echo '      "production": [{ "name": "app-ns" }],'
-    echo '      "staging": [{ "name": "test-ns" }]'
-    echo '    }'
-    echo '  }'
+    echo '  clusters:'
+    echo '    - name: production'
+    echo '    - name: staging'
+    echo '  namespaces:'
+    echo '    production:'
+    echo '      - name: app-ns'
+    echo '    staging:'
+    echo '      - name: test-ns'
     echo ""
 }
 
