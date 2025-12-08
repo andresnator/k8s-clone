@@ -16,21 +16,16 @@ Custom apps are defined in the `apps` array within your k8s-clone configuration 
 
 ### Basic Structure
 
-```json
-{
-  "apps": [
-    {
-      "name": "string",
-      "context": "string",
-      "namespaces": "string",
-      "services": [],
-      "deployments": [],
-      "configMaps": [],
-      "secrets": [],
-      "persistentVolumeClaims": []
-    }
-  ]
-}
+```yaml
+apps:
+  - name: string
+    context: string
+    namespaces: string
+    services: []
+    deployments: []
+    configMaps: []
+    secrets: []
+    persistentVolumeClaims: []
 ```
 
 ### Field Descriptions
@@ -51,20 +46,15 @@ Custom apps are defined in the `apps` array within your k8s-clone configuration 
 Each resource in the arrays can be defined in two ways:
 
 **Simple format** (resource name only):
-```json
-{
-  "resource": "my-service"
-}
+```yaml
+- resource: my-service
 ```
 
 **With overwrite-spec** (includes specification overrides):
-```json
-{
-  "resource": "my-deployment",
-  "overwrite-spec": {
-    "replicas": 3
-  }
-}
+```yaml
+- resource: my-deployment
+  overwrite-spec:
+    replicas: 3
 ```
 
 ## Adding a New Application
@@ -73,30 +63,21 @@ Each resource in the arrays can be defined in two ways:
 
 2. **Add an app entry** to the `apps` array:
 
-```json
-{
-  "apps": [
-    {
-      "name": "my-web-app",
-      "context": "production",
-      "namespaces": "prod-namespace",
-      "services": [
-        {"resource": "web-service"},
-        {"resource": "api-service"}
-      ],
-      "deployments": [
-        {"resource": "web-deployment"},
-        {"resource": "api-deployment"}
-      ],
-      "configMaps": [
-        {"resource": "app-config"}
-      ],
-      "secrets": [
-        {"resource": "app-secrets"}
-      ]
-    }
-  ]
-}
+```yaml
+apps:
+  - name: my-web-app
+    context: production
+    namespaces: prod-namespace
+    services:
+      - resource: web-service
+      - resource: api-service
+    deployments:
+      - resource: web-deployment
+      - resource: api-deployment
+    configMaps:
+      - resource: app-config
+    secrets:
+      - resource: app-secrets
 ```
 
 3. **Save the file** and the app will be available in the "Apps" menu.
@@ -116,55 +97,39 @@ The `overwrite-spec` feature allows you to override specific resource specificat
 
 #### Overriding Deployment Replicas
 
-```json
-{
-  "resource": "backend-deployment",
-  "overwrite-spec": {
-    "replicas": 5
-  }
-}
+```yaml
+- resource: backend-deployment
+  overwrite-spec:
+    replicas: 5
 ```
 
 This changes the replica count to 5, while keeping all other deployment specifications intact.
 
 #### Overriding PVC Storage Capacity
 
-```json
-{
-  "resource": "data-pvc",
-  "overwrite-spec": {
-    "resources": {
-      "requests": {
-        "storage": "100Gi"
-      }
-    }
-  }
-}
+```yaml
+- resource: data-pvc
+  overwrite-spec:
+    resources:
+      requests:
+        storage: 100Gi
 ```
 
 This sets the storage capacity to 100Gi, preserving other PVC settings.
 
 #### Overriding Multiple Nested Properties
 
-```json
-{
-  "resource": "api-deployment",
-  "overwrite-spec": {
-    "replicas": 3,
-    "template": {
-      "spec": {
-        "containers": [{
-          "name": "api",
-          "resources": {
-            "limits": {
-              "memory": "512Mi"
-            }
-          }
-        }]
-      }
-    }
-  }
-}
+```yaml
+- resource: api-deployment
+  overwrite-spec:
+    replicas: 3
+    template:
+      spec:
+        containers:
+          - name: api
+            resources:
+              limits:
+                memory: 512Mi
 ```
 
 ### Important Notes
@@ -180,73 +145,53 @@ This sets the storage capacity to 100Gi, preserving other PVC settings.
 
 Deploy an app from development to staging with increased replicas:
 
-```json
-{
-  "name": "my-app-staging",
-  "context": "dev-cluster",
-  "namespaces": "dev",
-  "deployments": [
-    {
-      "resource": "app-deployment",
-      "overwrite-spec": {
-        "replicas": 3
-      }
-    }
-  ]
-}
+```yaml
+- name: my-app-staging
+  context: dev-cluster
+  namespaces: dev
+  deployments:
+    - resource: app-deployment
+      overwrite-spec:
+        replicas: 3
 ```
 
 ### 2. Multi-Service Application
 
 Group all related microservices:
 
-```json
-{
-  "name": "ecommerce-platform",
-  "context": "production",
-  "namespaces": "prod",
-  "services": [
-    {"resource": "frontend"},
-    {"resource": "backend"},
-    {"resource": "payment-gateway"},
-    {"resource": "inventory"}
-  ],
-  "deployments": [
-    {"resource": "frontend-deployment"},
-    {"resource": "backend-deployment"},
-    {"resource": "payment-gateway-deployment"},
-    {"resource": "inventory-deployment"}
-  ],
-  "configMaps": [
-    {"resource": "app-config"}
-  ],
-  "secrets": [
-    {"resource": "db-credentials"},
-    {"resource": "api-keys"}
-  ]
-}
+```yaml
+- name: ecommerce-platform
+  context: production
+  namespaces: prod
+  services:
+    - resource: frontend
+    - resource: backend
+    - resource: payment-gateway
+    - resource: inventory
+  deployments:
+    - resource: frontend-deployment
+    - resource: backend-deployment
+    - resource: payment-gateway-deployment
+    - resource: inventory-deployment
+  configMaps:
+    - resource: app-config
+  secrets:
+    - resource: db-credentials
+    - resource: api-keys
 ```
 
 ### 3. Different Storage Requirements per Environment
 
-```json
-{
-  "name": "database-app",
-  "context": "dev-cluster",
-  "namespaces": "dev",
-  "persistentVolumeClaims": [
-    {
-      "resource": "db-data",
-      "overwrite-spec": {
-        "resources": {
-          "requests": {
-            "storage": "50Gi"
-          }
-        }
-      }
-    }
-  ]
-}
+```yaml
+- name: database-app
+  context: dev-cluster
+  namespaces: dev
+  persistentVolumeClaims:
+    - resource: db-data
+      overwrite-spec:
+        resources:
+          requests:
+            storage: 50Gi
 ```
 
 ## Deploying an App
@@ -274,10 +219,10 @@ The tool will automatically:
 
 ### App not appearing in the menu
 
-**Cause**: Configuration file might have a JSON syntax error or is not being loaded.
+**Cause**: Configuration file might have a YAML syntax error or is not being loaded.
 
 **Solution**: 
-1. Validate your JSON syntax using a JSON validator
+1. Validate your YAML syntax using a YAML validator
 2. Check the config file path (use `K8S_CLONE_CONFIG` env var if using a custom path)
 3. Ensure the app has a unique `name`
 
@@ -319,7 +264,7 @@ The Custom Apps feature includes built-in error handling:
 1. **Use Descriptive Names**: Choose clear, descriptive names for your apps (e.g., "production-api", "staging-frontend")
 2. **Test First**: Always test app deployments in a non-production environment first
 3. **Version Control**: Keep your k8s-clone config file in version control
-4. **Document overwrite-spec**: Add comments (outside JSON) documenting why specific overrides are needed
+4. **Document overwrite-spec**: Add comments in YAML documenting why specific overrides are needed
 5. **Start Simple**: Begin with simple apps (few resources, no overwrite-spec) and gradually add complexity
 6. **Review Changes**: Always review the deployment summary before confirming
 
@@ -327,91 +272,62 @@ The Custom Apps feature includes built-in error handling:
 
 Here's a complete example showing multiple apps with various configurations:
 
-```json
-{
-  "clusters": [
-    {"name": "dev"},
-    {"name": "staging"},
-    {"name": "production"}
-  ],
-  "namespaces": {
-    "dev": [{"name": "development"}],
-    "staging": [{"name": "staging"}],
-    "production": [{"name": "prod"}]
-  },
-  "apps": [
-    {
-      "name": "web-app-dev",
-      "context": "dev",
-      "namespaces": "development",
-      "services": [
-        {"resource": "web-frontend"},
-        {"resource": "web-backend"}
-      ],
-      "deployments": [
-        {
-          "resource": "frontend-deployment",
-          "overwrite-spec": {
-            "replicas": 1
-          }
-        },
-        {
-          "resource": "backend-deployment",
-          "overwrite-spec": {
-            "replicas": 1
-          }
-        }
-      ],
-      "configMaps": [
-        {"resource": "app-config"}
-      ],
-      "secrets": [
-        {"resource": "api-keys"}
-      ]
-    },
-    {
-      "name": "web-app-production",
-      "context": "staging",
-      "namespaces": "staging",
-      "services": [
-        {"resource": "web-frontend"},
-        {"resource": "web-backend"}
-      ],
-      "deployments": [
-        {
-          "resource": "frontend-deployment",
-          "overwrite-spec": {
-            "replicas": 5
-          }
-        },
-        {
-          "resource": "backend-deployment",
-          "overwrite-spec": {
-            "replicas": 3
-          }
-        }
-      ],
-      "configMaps": [
-        {"resource": "app-config"}
-      ],
-      "secrets": [
-        {"resource": "api-keys"}
-      ],
-      "persistentVolumeClaims": [
-        {
-          "resource": "backend-storage",
-          "overwrite-spec": {
-            "resources": {
-              "requests": {
-                "storage": "100Gi"
-              }
-            }
-          }
-        }
-      ]
-    }
-  ]
-}
+```yaml
+clusters:
+  - name: dev
+  - name: staging
+  - name: production
+
+namespaces:
+  dev:
+    - name: development
+  staging:
+    - name: staging
+  production:
+    - name: prod
+
+apps:
+  - name: web-app-dev
+    context: dev
+    namespaces: development
+    services:
+      - resource: web-frontend
+      - resource: web-backend
+    deployments:
+      - resource: frontend-deployment
+        overwrite-spec:
+          replicas: 1
+      - resource: backend-deployment
+        overwrite-spec:
+          replicas: 1
+    configMaps:
+      - resource: app-config
+    secrets:
+      - resource: api-keys
+
+  - name: web-app-production
+    context: staging
+    namespaces: staging
+    services:
+      - resource: web-frontend
+      - resource: web-backend
+    deployments:
+      - resource: frontend-deployment
+        overwrite-spec:
+          replicas: 5
+      - resource: backend-deployment
+        overwrite-spec:
+          replicas: 3
+    configMaps:
+      - resource: app-config
+    secrets:
+      - resource: api-keys
+    persistentVolumeClaims:
+      - resource: backend-storage
+        overwrite-spec:
+          resources:
+            requests:
+              storage: 100Gi
 ```
 
 ## Further Reading

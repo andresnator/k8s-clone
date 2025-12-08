@@ -75,15 +75,14 @@ create_config() {
     # Create config file with default empty structure if it doesn't exist
     if [[ ! -f "$CONFIG_FILE" ]]; then
         cat > "$CONFIG_FILE" << 'EOF'
-{
-    "clusters": [],
-    "namespaces": {},
-    "services": {},
-    "deployments": {},
-    "configMaps": {},
-    "secrets": {},
-    "persistentVolumeClaims": {}
-}
+clusters: []
+namespaces: {}
+services: {}
+deployments: {}
+configMaps: {}
+secrets: {}
+persistentVolumeClaims: {}
+apps: []
 EOF
         info "Created config file: $CONFIG_FILE"
     else
@@ -163,13 +162,14 @@ main() {
     echo "  \$ nano $CONFIG_FILE"
     echo ""
     echo "Example config with clusters and namespaces:"
-    echo '  {'
-    echo '    "clusters": [{ "name": "production" }, { "name": "staging" }],'
-    echo '    "namespaces": {'
-    echo '      "production": [{ "name": "app-ns" }],'
-    echo '      "staging": [{ "name": "test-ns" }]'
-    echo '    }'
-    echo '  }'
+    echo '  clusters:'
+    echo '    - name: production'
+    echo '    - name: staging'
+    echo '  namespaces:'
+    echo '    production:'
+    echo '      - name: app-ns'
+    echo '    staging:'
+    echo '      - name: test-ns'
     echo ""
 }
 

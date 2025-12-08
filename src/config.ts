@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import yaml from 'js-yaml';
 import { AppConfig } from './types.js';
 
 interface ClusterConfig {
@@ -88,6 +89,7 @@ export function ensureConfigDir(configPath: string): void {
 /**
  * Creates a default config file with the empty structure if it doesn't exist.
  * Returns true if the file was created, false if it already existed.
+ * Creates YAML format by default.
  */
 export function initializeConfigFile(configPath: string): boolean {
     if (fs.existsSync(configPath)) {
@@ -95,7 +97,8 @@ export function initializeConfigFile(configPath: string): boolean {
     }
     
     ensureConfigDir(configPath);
-    fs.writeFileSync(configPath, JSON.stringify(DEFAULT_CONFIG, null, 4), 'utf-8');
+    const yamlContent = yaml.dump(DEFAULT_CONFIG, { indent: 2 });
+    fs.writeFileSync(configPath, yamlContent, 'utf-8');
     return true;
 }
 
@@ -123,7 +126,14 @@ export class ConfigLoader {
         if (fs.existsSync(this.configPath)) {
             try {
                 const fileContent = fs.readFileSync(this.configPath, 'utf-8');
-                this.config = JSON.parse(fileContent);
+                
+                // Try to parse as YAML first (which also handles JSON)
+                try {
+                    this.config = yaml.load(fileContent) as Config;
+                } catch (yamlError) {
+                    // If YAML parsing fails, try JSON for backwards compatibility
+                    this.config = JSON.parse(fileContent);
+                }
             } catch (error) {
                 console.warn(`[WARN] Failed to parse ${this.configPath}. Using default behavior.`);
             }

@@ -80,9 +80,10 @@ describe('ConfigLoader', () => {
             expect(mockReadFileSync).not.toHaveBeenCalled();
         });
 
-        it('should handle invalid JSON in config file gracefully', () => {
+        it('should handle invalid config file gracefully', () => {
             mockExistsSync.mockReturnValue(true);
-            mockReadFileSync.mockReturnValue('invalid json');
+            // Create invalid content that will fail both YAML and JSON parsing
+            mockReadFileSync.mockReturnValue('{ invalid: : json: yaml: }');
             const consoleSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
             const loader = new ConfigLoader('k8s-defaults.json');
@@ -447,11 +448,12 @@ describe('initializeConfigFile', () => {
         const result = initializeConfigFile('/home/user/.k8s-clone/config');
 
         expect(result).toBe(true);
-        expect(mockWriteFileSync).toHaveBeenCalledWith(
-            '/home/user/.k8s-clone/config',
-            JSON.stringify(DEFAULT_CONFIG, null, 4),
-            'utf-8'
-        );
+        expect(mockWriteFileSync).toHaveBeenCalled();
+        const writeCall = mockWriteFileSync.mock.calls[0];
+        expect(writeCall[0]).toBe('/home/user/.k8s-clone/config');
+        expect(writeCall[2]).toBe('utf-8');
+        // Check that it's YAML format (contains YAML-style content)
+        expect(String(writeCall[1])).toContain('clusters: []');
     });
 
     it('should not create config file if it already exists', () => {
@@ -498,5 +500,72 @@ describe('Constants', () => {
 
     it('should define DEFAULT_CONFIG_PATH correctly', () => {
         expect(DEFAULT_CONFIG_PATH).toBe(path.join(os.homedir(), '.k8s-clone', 'config'));
+    });
+});
+
+describe('YAML Config Support', () => {
+    const mockYamlConfig = `
+clusters:
+  - name: cluster1
+  - name: cluster2
+namespaces:
+  cluster1:
+    - name: ns1
+    - name: ns2
+  cluster2:
+    - name: ns3
+services:
+  ns1:
+    - name: svc1
+    - name: svc2
+`;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+    });
+
+    it('should load YAML config successfully', () => {
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(mockYamlConfig);
+
+        const loader = new ConfigLoader('k8s-defaults.yaml');
+        const clusters = loader.getClusters();
+
+        expect(clusters).toEqual(['cluster1', 'cluster2']);
+    });
+
+    it('should load JSON config for backwards compatibility', () => {
+        const mockJsonConfig = {
+            clusters: [{ name: 'json-cluster' }],
+        };
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(JSON.stringify(mockJsonConfig));
+
+        const loader = new ConfigLoader('k8s-defaults.json');
+        const clusters = loader.getClusters();
+
+        expect(clusters).toEqual(['json-cluster']);
+    });
+
+    it('should handle YAML apps configuration', () => {
+        const yamlWithApps = `
+clusters:
+  - name: test
+apps:
+  - name: test-app
+    context: test
+    namespaces: test-ns
+    services:
+      - resource: svc1
+`;
+        mockExistsSync.mockReturnValue(true);
+        mockReadFileSync.mockReturnValue(yamlWithApps);
+
+        const loader = new ConfigLoader('config.yaml');
+        const apps = loader.getApps();
+
+        expect(apps).not.toBeNull();
+        expect(apps).toHaveLength(1);
+        expect(apps![0].name).toBe('test-app');
     });
 });

@@ -57,7 +57,7 @@ k8s-clone uses an optional configuration file at `~/.k8s-clone/config` to store 
 
 **Custom Location**: Set `K8S_CLONE_CONFIG` environment variable to use a different path.
 
-**Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.json` for structure details.
+**Behavior**: When empty, the tool auto-detects clusters from `~/.kube/config` and fetches resources via Kubernetes API. When populated, it uses pre-configured values. See `config.example.yaml` for structure details.
 
 ### Environment Variables
 
