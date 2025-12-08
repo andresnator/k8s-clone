@@ -104,8 +104,10 @@
                 {
                     "resource": "source-data-pvc",
                     "overwrite-spec": {
-                        "capacity": {
-                            "storage": "2Gi"
+                        "resources": {
+                            "requests": {
+                                "storage": "2Gi"
+                            }
                         }
                     }
                 }
