@@ -127,13 +127,9 @@ export class ConfigLoader {
             try {
                 const fileContent = fs.readFileSync(this.configPath, 'utf-8');
                 
-                // Try to parse as YAML first (which also handles JSON)
-                try {
-                    this.config = yaml.load(fileContent) as Config;
-                } catch (yamlError) {
-                    // If YAML parsing fails, try JSON for backwards compatibility
-                    this.config = JSON.parse(fileContent);
-                }
+                // Parse as YAML (which also handles JSON since JSON is a subset of YAML)
+                // Use CORE_SCHEMA for security (only supports JSON-compatible types)
+                this.config = yaml.load(fileContent, { schema: yaml.CORE_SCHEMA }) as Config;
             } catch (error) {
                 console.warn(`[WARN] Failed to parse ${this.configPath}. Using default behavior.`);
             }
