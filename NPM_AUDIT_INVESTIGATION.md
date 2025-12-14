@@ -170,9 +170,8 @@ updates:
     project: 'k8s-clone'
     path: '.'
     format: 'HTML'
-    args: >
-      --failOnCVSS 7
-      --enableRetired
+    args: >-
+      --failOnCVSS 7 --enableRetired
 ```
 
 **Pros**:
