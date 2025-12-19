@@ -9,7 +9,7 @@ interface BannerProps {
 export const Banner = ({ version }: BannerProps) => (
     <>
         <Gradient name="teen">
-            <BigText text="k8s-andresnator" />
+            <BigText text="k8s_andresnator" />
         </Gradient>
         <Text color="yellow">Kubernetes Resource Clone Tool (Sandbox environment)</Text>
         {version && <Text color="gray">Version: v{version}</Text>}
