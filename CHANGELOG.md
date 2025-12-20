@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/andresnator/k8s-clone/compare/v1.2.0...v1.2.1) (2025-12-20)
+
+
+### Bug Fixes
+
+* release ([ef67fa6](https://github.com/andresnator/k8s-clone/commit/ef67fa604d239f274891e272a8eeb13ec21abf3b)), closes [#56](https://github.com/andresnator/k8s-clone/issues/56)
+
 # [1.2.0](https://github.com/andresnator/k8s-clone/compare/v1.1.0...v1.2.0) (2025-12-08)
 
 
