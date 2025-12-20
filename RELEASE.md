@@ -36,7 +36,7 @@ Commit to `main` → Analyze commits → Generate notes → Update CHANGELOG →
 
 ### Production Release (main branch)
 1. Use [Conventional Commits](https://www.conventionalcommits.org/) format
-2. Merge PR to `main` (typically from `develop` for regular releases, or directly for hotfixes)
+2. Merge PR to `main` (from `develop` for regular releases, or directly to `main` for hotfixes)
 3. CI automatically creates release if applicable
 
 ### Release Candidate (develop branch)
@@ -72,7 +72,7 @@ When you need to create a release from develop to main:
    - Once merged, the Release workflow automatically triggers
    - semantic-release analyzes all commits since the last `main` release and determines the next version
    - If all new release-triggering commits are `fix:`, you'll get a patch release (e.g., `1.2.0` → `1.2.1`)
-   - If `develop` has already introduced `feat:` or breaking changes (e.g., `1.3.0-rc.1` on `develop`), merging to `main` will create the corresponding minor/major release instead (e.g., `1.2.0` → `1.3.0`)
+   - If `develop` has already introduced `feat:` or breaking changes (e.g., `1.3.0-rc.1` on `develop`), semantic-release will create the corresponding minor/major release. For example, `1.2.0` → `1.3.0` instead of a patch release.
 
 4. **Verify the release**:
    - Check GitHub Releases for the new version
