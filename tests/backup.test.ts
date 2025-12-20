@@ -250,17 +250,14 @@ describe('BackupManager', () => {
     });
 
     describe('timestamp format', () => {
-        it('should generate unique backup directories for multiple instances', () => {
+        it('should generate unique backup directories for multiple instances', async () => {
             const manager1 = new BackupManager();
             const manager2 = new BackupManager();
 
             const dir1 = manager1.ensureBackupDir();
             
-            // Small delay to ensure different timestamp
-            const start = Date.now();
-            while (Date.now() - start < 1100) {
-                // Wait for at least 1 second
-            }
+            // Wait for at least 1 second to ensure different timestamp
+            await new Promise(resolve => setTimeout(resolve, 1100));
             
             const dir2 = manager2.ensureBackupDir();
 
