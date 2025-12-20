@@ -1,46 +1,61 @@
-# Node.js dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Local Configuration
+config.yaml
+.env
+.env.*
 
-# Build output
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+junit.xml
+test-results/
+
+# Production Build
 dist/
 build/
 out/
 
 # TypeScript
 *.tsbuildinfo
-*.d.ts
 *.js.map
-
-# Test artifacts
-tests/*.js
-
-# Environment files
-.env
-.env.*   # any other env files
-
-# OS / editor artefacts
-.DS_Store
-Thumbs.db
-.idea/
-.vscode/
-*.sublime-workspace
-*.sublime-project
+ # Don't ignore .d.ts files in src/ (custom types)
+*.d.ts
+!src/**/*.d.ts
 
 # Logs
-logs/
+logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Temporary files
-tmp/
-temp/
-*.tmp
+# Editor / IDE
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
 
-# Miscellaneous
-coverage/
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Optional: npm pack
 *.tgz
-*.gz
-*.zip
+
+# Tooling caches
+.eslintcache
+.stylelintcache

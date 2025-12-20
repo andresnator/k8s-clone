@@ -6,6 +6,7 @@ import { UI } from '../src/ui.js';
 // Mock dependencies
 jest.mock('../src/k8s.js');
 jest.mock('../src/ui.js');
+jest.mock('../src/backup.js');
 jest.mock('child_process');
 
 describe('Migrator', () => {

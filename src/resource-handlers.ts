@@ -4,6 +4,7 @@ import { UI } from './ui.js';
 import { MetadataCleaner } from './metadata-cleaner.js';
 import { ResourceType } from './types.js';
 import { applyOverwriteSpec } from './spec-overwriter.js';
+import { BackupManager } from './backup.js';
 
 /**
  * Interface for resource migration handlers.
@@ -27,10 +28,12 @@ export interface DeleteHandler {
  */
 abstract class BaseResourceHandler implements ResourceHandler {
     protected ui: UI;
+    protected backupManager: BackupManager;
     abstract resourceType: string;
 
-    constructor(ui: UI) {
+    constructor(ui: UI, backupManager: BackupManager) {
         this.ui = ui;
+        this.backupManager = backupManager;
     }
 
     abstract migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void>;
@@ -40,6 +43,28 @@ abstract class BaseResourceHandler implements ResourceHandler {
             this.ui.logError(`${this.resourceType} '${name}' already exists in destination. Skipping.`);
         } else {
             this.ui.logError(`Failed to migrate ${this.resourceType} ${name}: ${error.body?.message || error.message}`);
+        }
+    }
+
+    /**
+     * Backs up a resource to the backup directory before processing.
+     */
+    protected backupResource(resource: any, name: string, namespace: string): void {
+        try {
+            const filepath = this.backupManager.backupResource(
+                resource,
+                this.resourceType,
+                name,
+                namespace
+            );
+            
+            // Validate backup was successful
+            if (!this.backupManager.validateBackup(filepath)) {
+                throw new Error(`Backup validation failed for ${filepath}`);
+            }
+        } catch (error: any) {
+            this.ui.logError(`Failed to backup ${this.resourceType} ${name}: ${error.message}`);
+            throw error; // Re-throw to stop migration if backup fails
         }
     }
 }
@@ -52,8 +77,8 @@ export class ConfigMapHandler extends BaseResourceHandler {
     private sourceApi: k8s.CoreV1Api;
     private destApi: k8s.CoreV1Api;
 
-    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
-        super(ui);
+    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI, backupManager: BackupManager) {
+        super(ui, backupManager);
         this.sourceApi = sourceClient.getCoreApi();
         this.destApi = destClient.getCoreApi();
     }
@@ -61,6 +86,10 @@ export class ConfigMapHandler extends BaseResourceHandler {
     async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedConfigMap({ name, namespace: sourceNs });
+            
+            // Backup the original resource BEFORE processing
+            this.backupResource(res, name, sourceNs);
+            
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
@@ -81,8 +110,8 @@ export class SecretHandler extends BaseResourceHandler {
     private sourceApi: k8s.CoreV1Api;
     private destApi: k8s.CoreV1Api;
 
-    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
-        super(ui);
+    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI, backupManager: BackupManager) {
+        super(ui, backupManager);
         this.sourceApi = sourceClient.getCoreApi();
         this.destApi = destClient.getCoreApi();
     }
@@ -90,6 +119,10 @@ export class SecretHandler extends BaseResourceHandler {
     async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedSecret({ name, namespace: sourceNs });
+            
+            // Backup the original resource BEFORE processing
+            this.backupResource(res, name, sourceNs);
+            
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
@@ -110,8 +143,8 @@ export class ServiceHandler extends BaseResourceHandler {
     private sourceApi: k8s.CoreV1Api;
     private destApi: k8s.CoreV1Api;
 
-    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
-        super(ui);
+    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI, backupManager: BackupManager) {
+        super(ui, backupManager);
         this.sourceApi = sourceClient.getCoreApi();
         this.destApi = destClient.getCoreApi();
     }
@@ -119,6 +152,10 @@ export class ServiceHandler extends BaseResourceHandler {
     async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedService({ name, namespace: sourceNs });
+            
+            // Backup the original resource BEFORE processing
+            this.backupResource(res, name, sourceNs);
+            
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
@@ -139,8 +176,8 @@ export class DeploymentHandler extends BaseResourceHandler {
     private sourceApi: k8s.AppsV1Api;
     private destApi: k8s.AppsV1Api;
 
-    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
-        super(ui);
+    constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI, backupManager: BackupManager) {
+        super(ui, backupManager);
         this.sourceApi = sourceClient.getAppsApi();
         this.destApi = destClient.getAppsApi();
     }
@@ -148,6 +185,10 @@ export class DeploymentHandler extends BaseResourceHandler {
     async migrate(name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>): Promise<void> {
         try {
             const res = await this.sourceApi.readNamespacedDeployment({ name, namespace: sourceNs });
+            
+            // Backup the original resource BEFORE processing
+            this.backupResource(res, name, sourceNs);
+            
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
@@ -172,16 +213,17 @@ export class ResourceHandlerFactory {
     static createMigrationHandlers(
         sourceClient: K8sClient,
         destClient: K8sClient,
-        ui: UI
+        ui: UI,
+        backupManager: BackupManager
     ): Map<ResourceType, ResourceHandler> {
         const handlers = new Map<ResourceType, ResourceHandler>();
         
         // Order matters: ConfigMaps and Secrets first (may be referenced by Deployments)
-        handlers.set(ResourceType.ConfigMap, new ConfigMapHandler(sourceClient, destClient, ui));
-        handlers.set(ResourceType.Secret, new SecretHandler(sourceClient, destClient, ui));
+        handlers.set(ResourceType.ConfigMap, new ConfigMapHandler(sourceClient, destClient, ui, backupManager));
+        handlers.set(ResourceType.Secret, new SecretHandler(sourceClient, destClient, ui, backupManager));
         // Services before Deployments
-        handlers.set(ResourceType.Service, new ServiceHandler(sourceClient, destClient, ui));
-        handlers.set(ResourceType.Deployment, new DeploymentHandler(sourceClient, destClient, ui));
+        handlers.set(ResourceType.Service, new ServiceHandler(sourceClient, destClient, ui, backupManager));
+        handlers.set(ResourceType.Deployment, new DeploymentHandler(sourceClient, destClient, ui, backupManager));
         
         return handlers;
     }
