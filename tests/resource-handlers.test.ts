@@ -61,7 +61,7 @@ describe('ResourceHandlerFactory', () => {
 
         // Mock BackupManager methods
         (backupManager.ensureBackupDir as jest.Mock) = jest.fn().mockReturnValue('/tmp/k8s_source_test');
-        (backupManager.backupResource as jest.Mock) = jest.fn().mockResolvedValue('/tmp/k8s_source_test/test.yaml');
+        (backupManager.backupResource as jest.Mock) = jest.fn().mockReturnValue('/tmp/k8s_source_test/test.yaml');
         (backupManager.validateBackup as jest.Mock) = jest.fn().mockReturnValue(true);
     });
 

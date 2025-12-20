@@ -5,7 +5,6 @@ import path from 'path';
 
 describe('BackupManager', () => {
     let backupManager: BackupManager;
-    let testBackupDir: string;
 
     beforeEach(() => {
         backupManager = new BackupManager();
@@ -60,7 +59,7 @@ describe('BackupManager', () => {
     });
 
     describe('backupResource', () => {
-        it('should create a YAML file with correct naming', async () => {
+        it('should create a YAML file with correct naming', () => {
             const mockResource = {
                 apiVersion: 'v1',
                 kind: 'ConfigMap',
@@ -73,7 +72,7 @@ describe('BackupManager', () => {
                 },
             };
 
-            const filepath = await backupManager.backupResource(
+            const filepath = backupManager.backupResource(
                 mockResource,
                 'ConfigMap',
                 'test-configmap',
@@ -84,7 +83,7 @@ describe('BackupManager', () => {
             expect(fs.existsSync(filepath)).toBe(true);
         });
 
-        it('should write valid YAML content', async () => {
+        it('should write valid YAML content', () => {
             const mockResource = {
                 apiVersion: 'v1',
                 kind: 'Secret',
@@ -97,7 +96,7 @@ describe('BackupManager', () => {
                 },
             };
 
-            const filepath = await backupManager.backupResource(
+            const filepath = backupManager.backupResource(
                 mockResource,
                 'Secret',
                 'test-secret',
@@ -112,7 +111,7 @@ describe('BackupManager', () => {
             expect(content).toContain('namespace: production');
         });
 
-        it('should create file with read permissions', async () => {
+        it('should create file with read permissions', () => {
             const mockResource = {
                 apiVersion: 'v1',
                 kind: 'Service',
@@ -122,7 +121,7 @@ describe('BackupManager', () => {
                 },
             };
 
-            const filepath = await backupManager.backupResource(
+            const filepath = backupManager.backupResource(
                 mockResource,
                 'Service',
                 'test-service',
@@ -134,7 +133,7 @@ describe('BackupManager', () => {
             expect((stats.mode & 0o444) !== 0).toBe(true);
         });
 
-        it('should handle resources with complex nested structures', async () => {
+        it('should handle resources with complex nested structures', () => {
             const mockResource = {
                 apiVersion: 'apps/v1',
                 kind: 'Deployment',
@@ -176,7 +175,7 @@ describe('BackupManager', () => {
                 },
             };
 
-            const filepath = await backupManager.backupResource(
+            const filepath = backupManager.backupResource(
                 mockResource,
                 'Deployment',
                 'test-deployment',
@@ -190,7 +189,32 @@ describe('BackupManager', () => {
             expect(content).toContain('nginx:1.14.2');
         });
 
-        it('should throw error if file creation fails', async () => {
+        it('should sanitize unsafe characters in filenames', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test:config/map',
+                    namespace: 'prod\\ns',
+                },
+            };
+
+            const filepath = backupManager.backupResource(
+                mockResource,
+                'Config:Map',
+                'test:config/map',
+                'prod\\ns'
+            );
+
+            // Check that unsafe characters were replaced with underscores in the filename
+            const filename = path.basename(filepath);
+            expect(filename).toBe('prod_ns_Config_Map_test_config_map.yaml');
+            expect(filename).not.toContain(':');
+            expect(filename).not.toContain('\\');
+            expect(fs.existsSync(filepath)).toBe(true);
+        });
+
+        it('should throw error if file creation fails', () => {
             const mockResource = {
                 apiVersion: 'v1',
                 kind: 'ConfigMap',
@@ -206,9 +230,9 @@ describe('BackupManager', () => {
                 throw new Error('Write failed');
             }) as any;
 
-            await expect(
+            expect(() => {
                 backupManager.backupResource(mockResource, 'ConfigMap', 'test', 'default')
-            ).rejects.toThrow('Write failed');
+            }).toThrow('Write failed');
 
             // Restore original function
             fs.writeFileSync = originalWriteFileSync;
@@ -216,7 +240,7 @@ describe('BackupManager', () => {
     });
 
     describe('validateBackup', () => {
-        it('should return true for existing readable file', async () => {
+        it('should return true for existing readable file', () => {
             const mockResource = {
                 apiVersion: 'v1',
                 kind: 'ConfigMap',
@@ -226,7 +250,7 @@ describe('BackupManager', () => {
                 },
             };
 
-            const filepath = await backupManager.backupResource(
+            const filepath = backupManager.backupResource(
                 mockResource,
                 'ConfigMap',
                 'test',
@@ -242,7 +266,7 @@ describe('BackupManager', () => {
             expect(backupManager.validateBackup(nonExistentPath)).toBe(false);
         });
 
-        it('should return false for directory path', () => {
+        it('should return true for directory path', () => {
             const backupDir = backupManager.ensureBackupDir();
             
             expect(backupManager.validateBackup(backupDir)).toBe(true); // Directory is technically readable

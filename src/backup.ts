@@ -56,31 +56,29 @@ export class BackupManager {
      * @param namespace - Namespace of the resource
      * @returns Path to the saved file
      */
-    public async backupResource(
+    public backupResource(
         resource: any,
         resourceType: string,
         name: string,
         namespace: string
-    ): Promise<string> {
+    ): string {
         const backupDir = this.ensureBackupDir();
         
+        // Sanitize filename components to avoid filesystem issues
+        const sanitize = (str: string) => str.replace(/[:/\\]/g, '_');
+        
         // Create a safe filename: namespace_resourceType_name.yaml
-        const filename = `${namespace}_${resourceType}_${name}.yaml`;
+        const filename = `${sanitize(namespace)}_${sanitize(resourceType)}_${sanitize(name)}.yaml`;
         const filepath = path.join(backupDir, filename);
         
         // Convert resource to YAML
         const yamlContent = yaml.dump(resource, { indent: 2 });
         
-        // Write to file with read permissions
+        // Write to file with read and write permission for owner, read-only for group and others
         fs.writeFileSync(filepath, yamlContent, { 
             encoding: 'utf-8',
-            mode: 0o644 // Read permissions for owner, group, and others
+            mode: 0o644 // Read and write for owner, read-only for group and others
         });
-        
-        // Validate the file was created successfully
-        if (!fs.existsSync(filepath)) {
-            throw new Error(`Failed to create backup file: ${filepath}`);
-        }
         
         return filepath;
     }

@@ -49,9 +49,9 @@ abstract class BaseResourceHandler implements ResourceHandler {
     /**
      * Backs up a resource to the backup directory before processing.
      */
-    protected async backupResource(resource: any, name: string, namespace: string): Promise<void> {
+    protected backupResource(resource: any, name: string, namespace: string): void {
         try {
-            const filepath = await this.backupManager.backupResource(
+            const filepath = this.backupManager.backupResource(
                 resource,
                 this.resourceType,
                 name,
@@ -88,7 +88,7 @@ export class ConfigMapHandler extends BaseResourceHandler {
             const res = await this.sourceApi.readNamespacedConfigMap({ name, namespace: sourceNs });
             
             // Backup the original resource BEFORE processing
-            await this.backupResource(res, name, sourceNs);
+            this.backupResource(res, name, sourceNs);
             
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
@@ -121,7 +121,7 @@ export class SecretHandler extends BaseResourceHandler {
             const res = await this.sourceApi.readNamespacedSecret({ name, namespace: sourceNs });
             
             // Backup the original resource BEFORE processing
-            await this.backupResource(res, name, sourceNs);
+            this.backupResource(res, name, sourceNs);
             
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
@@ -154,7 +154,7 @@ export class ServiceHandler extends BaseResourceHandler {
             const res = await this.sourceApi.readNamespacedService({ name, namespace: sourceNs });
             
             // Backup the original resource BEFORE processing
-            await this.backupResource(res, name, sourceNs);
+            this.backupResource(res, name, sourceNs);
             
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {
@@ -187,7 +187,7 @@ export class DeploymentHandler extends BaseResourceHandler {
             const res = await this.sourceApi.readNamespacedDeployment({ name, namespace: sourceNs });
             
             // Backup the original resource BEFORE processing
-            await this.backupResource(res, name, sourceNs);
+            this.backupResource(res, name, sourceNs);
             
             const cleaned = MetadataCleaner.clean(res, destNs);
             if (overwriteSpec) {

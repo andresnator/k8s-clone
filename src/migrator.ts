@@ -95,7 +95,7 @@ export class Migrator {
                 
                 // Backup the original PVC BEFORE processing
                 try {
-                    const filepath = await this.backupManager.backupResource(res, 'PVC', name, sourceNs);
+                    const filepath = this.backupManager.backupResource(res, 'PVC', name, sourceNs);
                     if (!this.backupManager.validateBackup(filepath)) {
                         throw new Error(`Backup validation failed for ${filepath}`);
                     }
