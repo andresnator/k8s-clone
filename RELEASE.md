@@ -2,7 +2,7 @@
 
 This project uses [semantic-release](https://semantic-release.gitbook.io/) for automated versioning and publishing.
 
-**Configuration**: `.releaserc.json` defines plugins and release branch (`main` only).
+**Configuration**: `.releaserc.json` defines plugins and release branches (`main` and `develop`).
 
 ## Plugin Order
 
@@ -34,11 +34,22 @@ Commit to `main` → Analyze commits → Generate notes → Update CHANGELOG →
 
 ## Triggering a Release
 
+### Production Release (main branch)
 1. Use [Conventional Commits](https://www.conventionalcommits.org/) format
-2. Merge PR to `main`
+2. Merge PR from `develop` to `main`
 3. CI automatically creates release if applicable
 
+### Pre-Release (develop branch)
+1. Use [Conventional Commits](https://www.conventionalcommits.org/) format
+2. Merge PR to `develop`
+3. CI automatically creates pre-release if applicable
+
 **Note**: Only `fix:`, `feat:`, and breaking changes trigger releases. Types like `docs:`, `chore:`, `ci:` do not.
+
+## Branching Strategy
+
+- **`main`**: Production releases (e.g., `1.2.0`, `1.2.1`)
+- **`develop`**: Pre-releases (e.g., `1.3.0-develop.1`, `1.3.0-develop.2`)
 
 ## Related Files
 
