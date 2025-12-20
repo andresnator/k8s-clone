@@ -51,6 +51,34 @@ Commit to `main` → Analyze commits → Generate notes → Update CHANGELOG →
 - **`main`**: Production releases (e.g., `1.2.0`, `1.2.1`)
 - **`develop`**: Pre-releases (e.g., `1.3.0-develop.1`, `1.3.0-develop.2`)
 
+### Creating a Fix Release from develop to main
+
+When you need to create a fix release (patch version) from develop to main:
+
+1. **Ensure all changes in develop use proper commit format**:
+   ```bash
+   # Example fix commit
+   fix: resolve backup file permissions issue
+   
+   # Or with scope
+   fix(backup): handle special characters in filenames
+   ```
+
+2. **Create a PR from develop to main**:
+   - The PR should include all commits from develop that aren't in main
+   - Verify commits use `fix:` prefix for patch releases
+   - Review the changes carefully before merging
+
+3. **Merge the PR to main**:
+   - Once merged, the Release workflow automatically triggers
+   - semantic-release analyzes commits and creates a new patch version
+   - Example: `1.2.0` → `1.2.1` (for fix commits)
+
+4. **Verify the release**:
+   - Check GitHub Releases for the new version
+   - Verify npm package is published
+   - Confirm CHANGELOG.md is updated
+
 ## Related Files
 
 - `.releaserc.json`: Release configuration
