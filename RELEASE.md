@@ -39,17 +39,17 @@ Commit to `main` → Analyze commits → Generate notes → Update CHANGELOG →
 2. Merge PR from `develop` to `main`
 3. CI automatically creates release if applicable
 
-### Pre-Release (develop branch)
+### Release Candidate (develop branch)
 1. Use [Conventional Commits](https://www.conventionalcommits.org/) format
 2. Merge PR to `develop`
-3. CI automatically creates pre-release if applicable
+3. CI automatically creates release candidate if applicable
 
 **Note**: Only `fix:`, `feat:`, and breaking changes trigger releases. Types like `docs:`, `chore:`, `ci:` do not.
 
 ## Branching Strategy
 
 - **`main`**: Production releases (e.g., `1.2.0`, `1.2.1`)
-- **`develop`**: Pre-releases (e.g., `1.3.0-develop.1`, `1.3.0-develop.2`)
+- **`develop`**: Release candidates (e.g., `1.3.0-rc.1`, `1.3.0-rc.2`)
 
 ### Creating a Fix Release from develop to main
 
