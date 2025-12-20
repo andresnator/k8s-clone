@@ -3,14 +3,17 @@ import { ResourceHandlerFactory, DeleteHandlerFactory } from '../src/resource-ha
 import { ResourceType } from '../src/types.js';
 import { K8sClient } from '../src/k8s.js';
 import { UI } from '../src/ui.js';
+import { BackupManager } from '../src/backup.js';
 
 jest.mock('../src/k8s.js');
 jest.mock('../src/ui.js');
+jest.mock('../src/backup.js');
 
 describe('ResourceHandlerFactory', () => {
     let sourceClient: K8sClient;
     let destClient: K8sClient;
     let ui: UI;
+    let backupManager: BackupManager;
     let sourceCoreApi: any;
     let destCoreApi: any;
     let sourceAppsApi: any;
@@ -22,6 +25,7 @@ describe('ResourceHandlerFactory', () => {
         sourceClient = new K8sClient();
         destClient = new K8sClient();
         ui = new UI();
+        backupManager = new BackupManager();
 
         sourceCoreApi = {
             readNamespacedConfigMap: jest.fn(),
@@ -54,11 +58,16 @@ describe('ResourceHandlerFactory', () => {
         (ui.logInfo as jest.Mock) = jest.fn();
         (ui.logSuccess as jest.Mock) = jest.fn();
         (ui.logError as jest.Mock) = jest.fn();
+
+        // Mock BackupManager methods
+        (backupManager.ensureBackupDir as jest.Mock) = jest.fn().mockReturnValue('/tmp/k8s_source_test');
+        (backupManager.backupResource as jest.Mock) = jest.fn().mockResolvedValue('/tmp/k8s_source_test/test.yaml');
+        (backupManager.validateBackup as jest.Mock) = jest.fn().mockReturnValue(true);
     });
 
     describe('createMigrationHandlers', () => {
         it('should create handlers for all resource types', () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
 
             expect(handlers.size).toBe(4);
             expect(handlers.has(ResourceType.ConfigMap)).toBe(true);
@@ -68,7 +77,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('ConfigMapHandler should migrate ConfigMaps', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.ConfigMap)!;
 
             const mockCm = {
@@ -90,7 +99,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('SecretHandler should migrate Secrets', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.Secret)!;
 
             const mockSecret = {
@@ -112,7 +121,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('ServiceHandler should migrate Services', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.Service)!;
 
             const mockService = {
@@ -135,7 +144,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('DeploymentHandler should migrate Deployments', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.Deployment)!;
 
             const mockDeployment = {
@@ -157,7 +166,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('should handle AlreadyExists error', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.ConfigMap)!;
 
             const mockCm = { metadata: { name: 'test-cm' }, data: {} };
@@ -174,7 +183,7 @@ describe('ResourceHandlerFactory', () => {
         });
 
         it('should handle general errors', async () => {
-            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+            const handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, backupManager);
             const handler = handlers.get(ResourceType.ConfigMap)!;
 
             const mockCm = { metadata: { name: 'test-cm' }, data: {} };
