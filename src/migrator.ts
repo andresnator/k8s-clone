@@ -6,6 +6,7 @@ import { ResourceSelections, ResourceType } from './types.js';
 import { MetadataCleaner } from './metadata-cleaner.js';
 import { ResourceHandlerFactory } from './resource-handlers.js';
 import { applyOverwriteSpec } from './spec-overwriter.js';
+import { BackupManager } from './backup.js';
 
 /**
  * Handles migration of Kubernetes resources between namespaces/clusters.
@@ -15,13 +16,15 @@ export class Migrator {
     private sourceClient: K8sClient;
     private destClient: K8sClient;
     private ui: UI;
+    private backupManager: BackupManager;
     private handlers: Map<ResourceType, { migrate: (name: string, sourceNs: string, destNs: string, overwriteSpec?: Record<string, any>) => Promise<void> }>;
 
     constructor(sourceClient: K8sClient, destClient: K8sClient, ui: UI) {
         this.sourceClient = sourceClient;
         this.destClient = destClient;
         this.ui = ui;
-        this.handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui);
+        this.backupManager = new BackupManager();
+        this.handlers = ResourceHandlerFactory.createMigrationHandlers(sourceClient, destClient, ui, this.backupManager);
     }
 
     /**
@@ -49,6 +52,10 @@ export class Migrator {
         selections: ResourceSelections,
         overwriteSpecs?: Map<string, Record<string, any>>
     ) {
+        // Ensure backup directory is created and log the path
+        const backupDir = this.backupManager.ensureBackupDir();
+        this.ui.logInfo(`Backup directory created: ${backupDir}`);
+        
         // Create a map of resource type to selected names for ordered processing
         const resourceMap = new Map<ResourceType, string[]>([
             [ResourceType.ConfigMap, selections.configMaps],
@@ -85,6 +92,18 @@ export class Migrator {
         for (const name of pvcNames) {
             try {
                 const res = await sourceCore.readNamespacedPersistentVolumeClaim({ name, namespace: sourceNs });
+                
+                // Backup the original PVC BEFORE processing
+                try {
+                    const filepath = this.backupManager.backupResource(res, 'PVC', name, sourceNs);
+                    if (!this.backupManager.validateBackup(filepath)) {
+                        throw new Error(`Backup validation failed for ${filepath}`);
+                    }
+                } catch (backupError: any) {
+                    this.ui.logError(`Failed to backup PVC ${name}: ${backupError.message}`);
+                    throw backupError; // Re-throw to stop migration if backup fails
+                }
+                
                 const newPvc = MetadataCleaner.clean(res, destNs);
 
                 // Handle manual storage class migration
