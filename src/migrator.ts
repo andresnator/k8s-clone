@@ -56,6 +56,10 @@ export class Migrator {
         const backupDir = this.backupManager.ensureBackupDir();
         this.ui.logInfo(`Backup directory created: ${backupDir}`);
         
+        // Ensure post-processing backup directory is created and log the path
+        const processedBackupDir = this.backupManager.ensureProcessedBackupDir();
+        this.ui.logInfo(`Post-processing backup directory created: ${processedBackupDir}`);
+        
         // Create a map of resource type to selected names for ordered processing
         const resourceMap = new Map<ResourceType, string[]>([
             [ResourceType.ConfigMap, selections.configMaps],
@@ -121,6 +125,17 @@ export class Migrator {
                 const overwriteSpec = overwriteSpecs?.get(name);
                 if (overwriteSpec) {
                     applyOverwriteSpec(newPvc, overwriteSpec);
+                }
+
+                // Backup the processed PVC BEFORE applying to cluster
+                try {
+                    const processedFilepath = this.backupManager.backupProcessedResource(newPvc, 'PVC', name, destNs);
+                    if (!this.backupManager.validateBackup(processedFilepath)) {
+                        throw new Error(`Processed backup validation failed for ${processedFilepath}`);
+                    }
+                } catch (backupError: any) {
+                    this.ui.logError(`Failed to backup processed PVC ${name}: ${backupError.message}`);
+                    throw backupError; // Re-throw to stop migration if backup fails
                 }
 
                 await destCore.createNamespacedPersistentVolumeClaim({ namespace: destNs, body: newPvc });
