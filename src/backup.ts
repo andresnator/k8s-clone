@@ -86,6 +86,42 @@ export class BackupManager {
     }
 
     /**
+     * Saves a Kubernetes resource as a YAML file in the specified directory.
+     * 
+     * @param resource - The Kubernetes resource object to backup
+     * @param resourceType - Type of resource (e.g., 'ConfigMap', 'Secret')
+     * @param name - Name of the resource
+     * @param namespace - Namespace of the resource
+     * @param directory - The directory to save the file in
+     * @returns Path to the saved file
+     */
+    private writeResourceToYaml(
+        resource: any,
+        resourceType: string,
+        name: string,
+        namespace: string,
+        directory: string
+    ): string {
+        // Sanitize filename components to avoid filesystem issues
+        const sanitize = (str: string) => str.replace(/[:/\\]/g, '_');
+        
+        // Create a safe filename: namespace_resourceType_name.yaml
+        const filename = `${sanitize(namespace)}_${sanitize(resourceType)}_${sanitize(name)}.yaml`;
+        const filepath = path.join(directory, filename);
+        
+        // Convert resource to YAML
+        const yamlContent = yaml.dump(resource, { indent: 2 });
+        
+        // Write to file with read and write permission for owner, read-only for group and others
+        fs.writeFileSync(filepath, yamlContent, { 
+            encoding: 'utf-8',
+            mode: 0o644 // Read and write for owner, read-only for group and others
+        });
+        
+        return filepath;
+    }
+
+    /**
      * Saves a Kubernetes resource as a YAML file in the backup directory.
      * 
      * @param resource - The Kubernetes resource object to backup
@@ -101,24 +137,7 @@ export class BackupManager {
         namespace: string
     ): string {
         const backupDir = this.ensureBackupDir();
-        
-        // Sanitize filename components to avoid filesystem issues
-        const sanitize = (str: string) => str.replace(/[:/\\]/g, '_');
-        
-        // Create a safe filename: namespace_resourceType_name.yaml
-        const filename = `${sanitize(namespace)}_${sanitize(resourceType)}_${sanitize(name)}.yaml`;
-        const filepath = path.join(backupDir, filename);
-        
-        // Convert resource to YAML
-        const yamlContent = yaml.dump(resource, { indent: 2 });
-        
-        // Write to file with read and write permission for owner, read-only for group and others
-        fs.writeFileSync(filepath, yamlContent, { 
-            encoding: 'utf-8',
-            mode: 0o644 // Read and write for owner, read-only for group and others
-        });
-        
-        return filepath;
+        return this.writeResourceToYaml(resource, resourceType, name, namespace, backupDir);
     }
 
     /**
@@ -138,24 +157,7 @@ export class BackupManager {
         namespace: string
     ): string {
         const processedBackupDir = this.ensureProcessedBackupDir();
-        
-        // Sanitize filename components to avoid filesystem issues
-        const sanitize = (str: string) => str.replace(/[:/\\]/g, '_');
-        
-        // Create a safe filename: namespace_resourceType_name.yaml
-        const filename = `${sanitize(namespace)}_${sanitize(resourceType)}_${sanitize(name)}.yaml`;
-        const filepath = path.join(processedBackupDir, filename);
-        
-        // Convert resource to YAML
-        const yamlContent = yaml.dump(resource, { indent: 2 });
-        
-        // Write to file with read and write permission for owner, read-only for group and others
-        fs.writeFileSync(filepath, yamlContent, { 
-            encoding: 'utf-8',
-            mode: 0o644 // Read and write for owner, read-only for group and others
-        });
-        
-        return filepath;
+        return this.writeResourceToYaml(resource, resourceType, name, namespace, processedBackupDir);
     }
 
     /**
