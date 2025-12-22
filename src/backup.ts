@@ -11,10 +11,9 @@ export class BackupManager {
     private processedBackupDir: string | null = null;
 
     /**
-     * Generates a timestamped backup directory path.
-     * Format: /tmp/k8s_source_[YYYYMMDD]_[HHMMSS]/
+     * Generates a timestamp string in the format YYYYMMDD_HHMMSS.
      */
-    private static generateBackupPath(): string {
+    private static generateTimestamp(): string {
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -23,7 +22,15 @@ export class BackupManager {
         const minute = String(now.getMinutes()).padStart(2, '0');
         const second = String(now.getSeconds()).padStart(2, '0');
         
-        const timestamp = `${year}${month}${day}_${hour}${minute}${second}`;
+        return `${year}${month}${day}_${hour}${minute}${second}`;
+    }
+
+    /**
+     * Generates a timestamped backup directory path.
+     * Format: /tmp/k8s_source_[YYYYMMDD]_[HHMMSS]/
+     */
+    private static generateBackupPath(): string {
+        const timestamp = BackupManager.generateTimestamp();
         return `/tmp/k8s_source_${timestamp}`;
     }
 
@@ -32,15 +39,7 @@ export class BackupManager {
      * Format: /tmp/backup_processed_[YYYYMMDD]_[HHMMSS]/
      */
     private static generateProcessedBackupPath(): string {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hour = String(now.getHours()).padStart(2, '0');
-        const minute = String(now.getMinutes()).padStart(2, '0');
-        const second = String(now.getSeconds()).padStart(2, '0');
-        
-        const timestamp = `${year}${month}${day}_${hour}${minute}${second}`;
+        const timestamp = BackupManager.generateTimestamp();
         return `/tmp/backup_processed_${timestamp}`;
     }
 
