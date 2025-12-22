@@ -11,11 +11,20 @@ describe('BackupManager', () => {
     });
 
     afterEach(() => {
-        // Clean up test backup directory if it exists
+        // Clean up test backup directories if they exist
         const backupDir = backupManager.getBackupDir();
         if (backupDir && fs.existsSync(backupDir)) {
             try {
                 fs.rmSync(backupDir, { recursive: true, force: true });
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        }
+        
+        const processedBackupDir = backupManager.getProcessedBackupDir();
+        if (processedBackupDir && fs.existsSync(processedBackupDir)) {
+            try {
+                fs.rmSync(processedBackupDir, { recursive: true, force: true });
             } catch (e) {
                 // Ignore cleanup errors
             }
@@ -334,6 +343,275 @@ describe('BackupManager', () => {
                 expect(second).toBeGreaterThanOrEqual(0);
                 expect(second).toBeLessThanOrEqual(59);
             }
+        });
+    });
+
+    describe('ensureProcessedBackupDir', () => {
+        it('should create a post-processing backup directory with correct timestamp format', () => {
+            const processedBackupDir = backupManager.ensureProcessedBackupDir();
+            
+            expect(processedBackupDir).toMatch(/^\/tmp\/backup_processed_\d{8}_\d{6}$/);
+            expect(fs.existsSync(processedBackupDir)).toBe(true);
+        });
+
+        it('should return the same directory on subsequent calls', () => {
+            const firstCall = backupManager.ensureProcessedBackupDir();
+            const secondCall = backupManager.ensureProcessedBackupDir();
+            
+            expect(firstCall).toBe(secondCall);
+        });
+
+        it('should create directory if it does not exist', () => {
+            const processedBackupDir = backupManager.ensureProcessedBackupDir();
+            
+            expect(fs.existsSync(processedBackupDir)).toBe(true);
+            const stats = fs.statSync(processedBackupDir);
+            expect(stats.isDirectory()).toBe(true);
+        });
+
+        it('should create a different directory from the original backup directory', () => {
+            const backupDir = backupManager.ensureBackupDir();
+            const processedBackupDir = backupManager.ensureProcessedBackupDir();
+            
+            expect(backupDir).not.toBe(processedBackupDir);
+            expect(backupDir).toContain('k8s_source_');
+            expect(processedBackupDir).toContain('backup_processed_');
+        });
+    });
+
+    describe('getProcessedBackupDir', () => {
+        it('should return null before ensureProcessedBackupDir is called', () => {
+            expect(backupManager.getProcessedBackupDir()).toBe(null);
+        });
+
+        it('should return the processed backup directory after ensureProcessedBackupDir is called', () => {
+            const processedBackupDir = backupManager.ensureProcessedBackupDir();
+            
+            expect(backupManager.getProcessedBackupDir()).toBe(processedBackupDir);
+        });
+    });
+
+    describe('backupProcessedResource', () => {
+        it('should create a YAML file with correct naming in processed backup directory', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test-configmap',
+                    namespace: 'dest-namespace',
+                },
+                data: {
+                    key: 'value',
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'ConfigMap',
+                'test-configmap',
+                'dest-namespace'
+            );
+
+            expect(filepath).toContain('backup_processed_');
+            expect(filepath).toContain('dest-namespace_ConfigMap_test-configmap.yaml');
+            expect(fs.existsSync(filepath)).toBe(true);
+        });
+
+        it('should write valid YAML content for processed resources', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: 'test-secret',
+                    namespace: 'production',
+                },
+                data: {
+                    username: 'YWRtaW4=',
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'Secret',
+                'test-secret',
+                'production'
+            );
+
+            const content = fs.readFileSync(filepath, 'utf-8');
+            
+            expect(content).toContain('apiVersion: v1');
+            expect(content).toContain('kind: Secret');
+            expect(content).toContain('name: test-secret');
+            expect(content).toContain('namespace: production');
+        });
+
+        it('should create file with read permissions in processed backup directory', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'Service',
+                metadata: {
+                    name: 'test-service',
+                    namespace: 'default',
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'Service',
+                'test-service',
+                'default'
+            );
+
+            const stats = fs.statSync(filepath);
+            // Check that file has read permissions (644)
+            expect((stats.mode & 0o444) !== 0).toBe(true);
+        });
+
+        it('should handle processed resources with modified structures', () => {
+            const mockResource = {
+                apiVersion: 'apps/v1',
+                kind: 'Deployment',
+                metadata: {
+                    name: 'test-deployment',
+                    namespace: 'dest-namespace',
+                },
+                spec: {
+                    replicas: 5, // Modified from original
+                    selector: {
+                        matchLabels: {
+                            app: 'test',
+                        },
+                    },
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'Deployment',
+                'test-deployment',
+                'dest-namespace'
+            );
+
+            const content = fs.readFileSync(filepath, 'utf-8');
+            
+            expect(content).toContain('kind: Deployment');
+            expect(content).toContain('replicas: 5');
+            expect(content).toContain('namespace: dest-namespace');
+        });
+
+        it('should sanitize unsafe characters in filenames for processed backups', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test:config/map',
+                    namespace: 'prod\\ns',
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'Config:Map',
+                'test:config/map',
+                'prod\\ns'
+            );
+
+            // Check that unsafe characters were replaced with underscores in the filename
+            const filename = path.basename(filepath);
+            expect(filename).toBe('prod_ns_Config_Map_test_config_map.yaml');
+            expect(filename).not.toContain(':');
+            expect(filename).not.toContain('\\');
+            expect(fs.existsSync(filepath)).toBe(true);
+        });
+
+        it('should create files in separate directories for original and processed backups', () => {
+            const originalResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test-cm',
+                    namespace: 'source-ns',
+                },
+                data: { original: 'true' },
+            };
+
+            const processedResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test-cm',
+                    namespace: 'dest-ns',
+                },
+                data: { processed: 'true' },
+            };
+
+            const originalPath = backupManager.backupResource(
+                originalResource,
+                'ConfigMap',
+                'test-cm',
+                'source-ns'
+            );
+
+            const processedPath = backupManager.backupProcessedResource(
+                processedResource,
+                'ConfigMap',
+                'test-cm',
+                'dest-ns'
+            );
+
+            expect(originalPath).toContain('k8s_source_');
+            expect(processedPath).toContain('backup_processed_');
+            expect(originalPath).not.toBe(processedPath);
+            
+            // Verify both files exist
+            expect(fs.existsSync(originalPath)).toBe(true);
+            expect(fs.existsSync(processedPath)).toBe(true);
+            
+            // Verify different content
+            const originalContent = fs.readFileSync(originalPath, 'utf-8');
+            const processedContent = fs.readFileSync(processedPath, 'utf-8');
+            
+            expect(originalContent).toContain("original: 'true'");
+            expect(processedContent).toContain("processed: 'true'");
+        });
+    });
+
+    describe('post-processing backup validation', () => {
+        it('should validate processed backup files correctly', () => {
+            const mockResource = {
+                apiVersion: 'v1',
+                kind: 'ConfigMap',
+                metadata: {
+                    name: 'test',
+                    namespace: 'default',
+                },
+            };
+
+            const filepath = backupManager.backupProcessedResource(
+                mockResource,
+                'ConfigMap',
+                'test',
+                'default'
+            );
+
+            expect(backupManager.validateBackup(filepath)).toBe(true);
+        });
+
+        it('should handle both original and processed backups independently', () => {
+            const resource = {
+                apiVersion: 'v1',
+                kind: 'Secret',
+                metadata: {
+                    name: 'test-secret',
+                    namespace: 'test-ns',
+                },
+            };
+
+            const originalPath = backupManager.backupResource(resource, 'Secret', 'test-secret', 'test-ns');
+            const processedPath = backupManager.backupProcessedResource(resource, 'Secret', 'test-secret', 'test-ns');
+
+            expect(backupManager.validateBackup(originalPath)).toBe(true);
+            expect(backupManager.validateBackup(processedPath)).toBe(true);
         });
     });
 });

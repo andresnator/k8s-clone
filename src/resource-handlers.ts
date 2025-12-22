@@ -67,6 +67,29 @@ abstract class BaseResourceHandler implements ResourceHandler {
             throw error; // Re-throw to stop migration if backup fails
         }
     }
+
+    /**
+     * Backs up a processed resource to the post-processing backup directory.
+     * Called after cleaning and overwrite spec application but before applying to cluster.
+     */
+    protected backupProcessedResource(resource: any, name: string, namespace: string): void {
+        try {
+            const filepath = this.backupManager.backupProcessedResource(
+                resource,
+                this.resourceType,
+                name,
+                namespace
+            );
+            
+            // Validate backup was successful
+            if (!this.backupManager.validateBackup(filepath)) {
+                throw new Error(`Processed backup validation failed for ${filepath}`);
+            }
+        } catch (error: any) {
+            this.ui.logError(`Failed to backup processed ${this.resourceType} ${name}: ${error.message}`);
+            throw error; // Re-throw to stop migration if backup fails
+        }
+    }
 }
 
 /**
@@ -94,6 +117,10 @@ export class ConfigMapHandler extends BaseResourceHandler {
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
             }
+            
+            // Backup the processed resource BEFORE applying to cluster
+            this.backupProcessedResource(cleaned, name, destNs);
+            
             await this.destApi.createNamespacedConfigMap({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -127,6 +154,10 @@ export class SecretHandler extends BaseResourceHandler {
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
             }
+            
+            // Backup the processed resource BEFORE applying to cluster
+            this.backupProcessedResource(cleaned, name, destNs);
+            
             await this.destApi.createNamespacedSecret({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -160,6 +191,10 @@ export class ServiceHandler extends BaseResourceHandler {
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
             }
+            
+            // Backup the processed resource BEFORE applying to cluster
+            this.backupProcessedResource(cleaned, name, destNs);
+            
             await this.destApi.createNamespacedService({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
@@ -193,6 +228,10 @@ export class DeploymentHandler extends BaseResourceHandler {
             if (overwriteSpec) {
                 applyOverwriteSpec(cleaned, overwriteSpec);
             }
+            
+            // Backup the processed resource BEFORE applying to cluster
+            this.backupProcessedResource(cleaned, name, destNs);
+            
             await this.destApi.createNamespacedDeployment({ namespace: destNs, body: cleaned });
             this.ui.logSuccess(`${this.resourceType} ${name} migrated.`);
         } catch (e: any) {
